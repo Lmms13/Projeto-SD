@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "sdmessage.pb-c.h": "c",
+        "message-private.h": "c"
+    }
+}

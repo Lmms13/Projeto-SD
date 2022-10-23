@@ -52,6 +52,8 @@ struct  _MessageT
   MessageT__Opcode opcode;
   MessageT__CType c_type;
   ProtobufCBinaryData data;
+  int size;
+  int height;
 };
 #define MESSAGE_T__INIT \
  { PROTOBUF_C_MESSAGE_INIT (&message_t__descriptor) \

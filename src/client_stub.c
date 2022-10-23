@@ -69,10 +69,19 @@ int rtree_disconnect(struct rtree_t *rtree){
  * Devolve 0 (ok, em adição/substituição) ou -1 (problemas).
  */
 int rtree_put(struct rtree_t *rtree, struct entry_t *entry){
-    struct message_t *message = message_create();
-    if(message == NULL){
+    struct message_t *msg = message_create();
+    if(msg == NULL){
         return -1;
     }
+
+    msg->content.opcode = MESSAGE_T__OPCODE__OP_PUT;
+    msg->content.c_type = MESSAGE_T__C_TYPE__CT_ENTRY;
+    msg->content.data.data = entry->value->data;
+    msg->content.data.len = entry->value->datasize;
+    network_send_receive(rtree, msg);
+    message_t__free_unpacked(&msg->content, NULL);
+    return 0;
+    
 
 }
 
@@ -89,7 +98,18 @@ int rtree_del(struct rtree_t *rtree, char *key);
 
 /* Devolve o número de elementos contidos na árvore.
  */
-int rtree_size(struct rtree_t *rtree);
+int rtree_size(struct rtree_t *rtree){
+    struct message_t *msg = message_create();
+    if(msg == NULL){
+        return -1;
+    }
+
+    msg->content.opcode = MESSAGE_T__OPCODE__OP_SIZE;
+    msg->content.c_type = MESSAGE_T__C_TYPE__CT_NONE;
+    msg = network_send_receive(rtree, msg);
+
+    //return msg->content
+}
 
 /* Função que devolve a altura da árvore.
  */

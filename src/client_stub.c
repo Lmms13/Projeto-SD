@@ -273,5 +273,4 @@ void **rtree_get_values(struct rtree_t *rtree){
     printf("%d valores encontrados\n", sizeof(msg->content.values) / sizeof(void*));
 
     return msg->content.values;
-
 }

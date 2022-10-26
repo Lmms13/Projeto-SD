@@ -87,7 +87,7 @@ int network_main_loop(int listening_socket){
                 result = network_send(socket, msg);
                 if(result == -1){
                     close(socket);
-                        return -1;
+                    return -1;
                 }
             }
         } 
@@ -172,6 +172,5 @@ int network_send(int client_socket, struct message_t *msg){
  */
 int network_server_close(){
     tree_skel_destroy();
-    close(socket_num);
-    return 0;
+    return close(socket_num);
 }

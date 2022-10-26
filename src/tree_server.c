@@ -8,9 +8,27 @@ int main(int argc, char const *argv[]){
     }
 
     int socket = network_server_init(atoi(argv[1]));
-    tree_skel_init();
+    if(socket == -1){
+        printf("Ocorreu um erro\n");
+        return -1;
+    }
+
+    if(tree_skel_init() == -1){
+        printf("Ocorreu um erro\n");
+        return -1;
+    }
+
     int result = network_main_loop(socket);
-    network_server_close();
+    if(result == -1){
+        printf("Ocorreu um erro\n");
+        return -1;
+    }
+
+    if(network_server_close() == -1){
+        printf("Ocorreu um erro\n");
+        return -1;
+    }
+    
     tree_skel_destroy();
     return 0;
 }

@@ -17,7 +17,7 @@ int message_read_all(int socket, void* buffer, int size){
     int count,result = 0;
     while(count < size){
         result = read(socket, buffer + count, size - count);
-        if(result < 1){
+        if(result <= 0){
             return -1;
         }
         else{
@@ -32,7 +32,7 @@ int message_write_all(int socket, void* buffer, int size){
     int len = size;
     while(size > 0){
         result = write(socket, buffer, size);
-        if(result < 0){
+        if(result <= 0){
             return -1;
         }
         else{

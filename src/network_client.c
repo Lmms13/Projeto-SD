@@ -96,7 +96,7 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
         close(descriptor);
         return NULL;
     }
-    buffer[size - 1] = '\0';
+    // buffer[size - 1] = '\0';
 
     msg->content = *message_t__unpack(NULL, size, buffer);
     

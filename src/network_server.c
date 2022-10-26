@@ -33,10 +33,7 @@ struct message_t *network_receive(int client_socket){
     int nbytes, size_net_ord, size;
 
     int size_net_ord = 0;
-    //sizeof(int) ou constante MAX_MSG? 
-    //descobre-se o size com o read e depois lê-se com o read all?
-    //fecha-se o client socket?
-    nbytes = read(client_socket, &size_net_ord, sizeof(int));
+    nbytes = read_all(client_socket, &size_net_ord, sizeof(int));
     if(nbytes == 0){
         perror("Erro ao receber dados do cliente!");
         close(client_socket);
@@ -51,7 +48,6 @@ struct message_t *network_receive(int client_socket){
         close(client_socket);
         return NULL;
     }
-    buffer[size - 1] = '\0';
 
     struct message_t *msg = message_create();
     msg->content = *message_t__unpack(NULL, size, buffer);
@@ -72,32 +68,32 @@ struct message_t *network_receive(int client_socket){
 int network_send(int client_socket, struct message_t *msg){
     int size = message_t__get_packed_size(&msg->content);
     int size_net_ord = htonl(size);
-    uint8_t *buf = malloc(size);
-    if(buf == NULL){
+    uint8_t *buffer = malloc(size);
+    if(buffer == NULL){
         perror("Erro no malloc do buf!");
         return NULL;
     }
-    message_t__pack(&msg->content, buf);
+    message_t__pack(&msg->content, buffer);
 
     //free à mensagem faz-se assim? dando unpack ao que foi packed?
-    message_t__free_unpacked(&msg, NULL);
+    //message_t__free_unpacked(&msg->content, NULL);
     ////////////////////////
     
-    int nbytes = write(client_socket, &size_net_ord, sizeof(int));
+    int nbytes = write_all(client_socket, &size_net_ord, sizeof(int));
     if(nbytes != sizeof(int)){
         perror("Erro ao enviar dados ao cliente!");
         close(client_socket);
         return NULL;
     }
 
-    nbytes = write_all(client_socket, buf, size);
+    nbytes = write_all(client_socket, buffer, size);
     if(nbytes < 0){
         perror("Erro ao enviar todos os dados ao cliente!");
         close(client_socket);
         return NULL;
     }
 
-    free(buf);
+    free(buffer);
     return 0;
 }
 

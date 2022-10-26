@@ -44,6 +44,7 @@ int invoke(struct message_t *msg){
         break;
 
         case MESSAGE_T__OPCODE__OP_DEL:
+        
         //de onde vem a entry?
           //  result = tree_del(global_tree, msg->content.data)
             //msg->content.opcode = MESSAGE_T__OPCODE__OP_HEIGHT + 1;

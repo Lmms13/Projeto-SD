@@ -13,6 +13,11 @@ struct message_t* message_create(){
     return msg;
 }
 
+void message_delete(struct message_t* msg){
+    message_t__free_unpacked(&msg->content, NULL);
+    free(msg);
+}
+
 int message_read_all(int socket, void* buffer, int size){
     int count,result = 0;
     while(count < size){

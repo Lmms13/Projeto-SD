@@ -65,8 +65,8 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
     }
     message_t__pack(&msg->content, buffer);
     
-    int nbytes = write(descriptor, buffer, size_net_ord);
-    if(nbytes != size_net_ord){
+    int nbytes = write_all(descriptor, &size_net_ord, sizeof(int));
+    if(nbytes != sizeof(int)){
         perror("Erro ao enviar dados ao servidor");
         close(descriptor);
         return NULL;
@@ -81,17 +81,17 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
 
     free(buffer);
     size_net_ord = 0;
-    nbytes = read(descriptor, &size_net_ord, sizeof(int));
-    size = ntohl(size_net_ord);
+    nbytes = read_all(descriptor, &size_net_ord, sizeof(int));
     if(nbytes != sizeof(int)){
         perror("Erro ao receber dados do servidor");
         close(descriptor);
         return NULL;
     };
 
+    size = ntohl(size_net_ord);
     buffer = malloc(size);
     nbytes = read_all(descriptor, buffer, size);
-    if(nbytes < 1){
+    if(nbytes < 0){
         perror("Erro ao receber todos os dados do servidor");
         close(descriptor);
         return NULL;

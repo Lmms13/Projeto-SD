@@ -3,4 +3,6 @@
 
 void network_pipe_close(int);
 
+void network_abort(int);
+
 #endif

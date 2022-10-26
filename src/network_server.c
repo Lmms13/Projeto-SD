@@ -2,8 +2,14 @@
 #include <message-private.h>
 #include <network_server.h>
 #include <sdmessage.pb-c.h>
+#include <network-private.h>
 
-struct sockaddr_in socket;
+#include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <signal.h>
+
+struct sockaddr_in server;
 int socket_num;
 
 /* Função para preparar uma socket de receção de pedidos de ligação
@@ -11,7 +17,41 @@ int socket_num;
  * Retornar descritor do socket (OK) ou -1 (erro).
  */
 int network_server_init(short port){
+    signal(SIGINT, network_abort);
 
+    // Cria socket TCP
+    socket_num = socket(AF_INET, SOCK_STREAM, 0);
+    if(socket_num < 0 ) {
+        perror("Erro ao criar socket");
+        return -1;
+    }
+
+    // Preenche estrutura server para bind
+    server.sin_family = AF_INET;
+    server.sin_port = htons(port);
+    server.sin_addr.s_addr = htonl(INADDR_ANY);
+    int stay_port = 1;
+    setsockopt(socket_num, SOL_SOCKET, SO_REUSEADDR, &stay_port, sizeof(int));
+    if(bind(socket_num, (struct sockaddr*) &server, sizeof(server)) < 0){
+        perror("Erro ao fazer bind");
+        close(socket_num);
+        return -1;
+    };
+
+    // Faz listen
+    if (listen(socket_num, 0) < 0){
+        perror("Erro ao executar listen");
+        close(socket_num);
+        return -1;
+    };
+
+    return socket_num;
+}
+
+network_abort(int n){
+    network_server_close();
+    printf("Ctrl+C detetado. A encerrar o servidor...\n");
+    exit(1);
 }
 
 /* Esta função deve:
@@ -21,7 +61,39 @@ int network_server_init(short port){
  * - Esperar a resposta do skeleton;
  * - Enviar a resposta ao cliente usando a função network_send.
  */
-int network_main_loop(int listening_socket);
+int network_main_loop(int listening_socket){
+    signal(SIGINT, network_abort);
+    printf("A espera de um cliente...\n");
+
+    struct sockaddr_in client;
+    socklen_t client_size;
+    int socket, connected, result;
+    while(1){
+
+        if((socket = accept(listening_socket, (struct sockaddr*) &client, &client_size)) != -1){
+            printf("Um cliente foi conectado!\n");
+            connected = 1;
+            while(connected){
+                struct message_t*msg = network_receive(socket);
+
+                if(msg == NULL){
+                    printf("A conexao com o cliente foi terminada!\n");
+                    connected = 0;
+                    close(socket);
+                    continue;
+                }
+
+                invoke(msg);
+                result = network_send(socket, msg);
+                if(result == -1){
+                    close(socket);
+                        return -1;
+                }
+            }
+        } 
+    }
+    return 0;
+}
 
 /* Esta função deve:
  * - Ler os bytes da rede, a partir do client_socket indicado;
@@ -75,9 +147,7 @@ int network_send(int client_socket, struct message_t *msg){
     }
     message_t__pack(&msg->content, buffer);
 
-    //free à mensagem faz-se assim? dando unpack ao que foi packed?
-    //message_t__free_unpacked(&msg->content, NULL);
-    ////////////////////////
+    free(msg);
     
     int nbytes = write_all(client_socket, &size_net_ord, sizeof(int));
     if(nbytes != sizeof(int)){

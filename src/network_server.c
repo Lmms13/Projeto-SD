@@ -147,7 +147,7 @@ int network_send(int client_socket, struct message_t *msg){
     }
     message_t__pack(&msg->content, buffer);
 
-    free(msg);
+    message_destroy(msg);
     
     int nbytes = write_all(client_socket, &size_net_ord, sizeof(int));
     if(nbytes != sizeof(int)){

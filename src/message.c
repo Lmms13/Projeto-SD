@@ -13,7 +13,7 @@ struct message_t* message_create(){
     return msg;
 }
 
-void message_delete(struct message_t* msg){
+void message_destroy(struct message_t* msg){
     message_t__free_unpacked(&msg->content, NULL);
     free(msg);
 }

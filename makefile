@@ -3,13 +3,12 @@
 # Afonso Aleluia 56363
 # Daniel Marques 56379
 
-serialization.o = src/serialization.c
 data.o = src/data.c
 entry.o = src/entry.c
 tree.o = src/tree.c
-test_data = obj/data.o src/test_data.c
-test_entry = obj/data.o obj/entry.o src/test_entry.c
-test_tree = obj/data.o obj/entry.o obj/serialization.o obj/tree.o src/test_tree.c
+client-lib.o = obj/data.o obj/entry obj/message.o client_stub.o network_client.o sdmessage.pb-c.o
+tree-server = tree_server.o data.o entry.o tree.o message.o tree_skel.o network_server.o sdmessage.pb-c.o
+tree-client = tree_client.o data.o entry.o message.o client_stub.o network_client.o sdmessage.pb-c.o
 
 headers = -I ./include
 objectPath = obj
@@ -17,22 +16,12 @@ binaryPath = bin
 flags = -g -c -o
 CC = gcc 
 
-all: bin/test_data bin/test_entry bin/test_tree
+all: obj/client-lib.o bin/tree-client bin/tree-server
 
-bin/test_tree: $(test_tree) 
-	$(CC) $(test_tree) $(headers) -g -o $(binaryPath)/test_tree
-
-bin/test_entry: $(test_entry) 
-	$(CC) $(test_entry) $(headers) -g -o $(binaryPath)/test_entry
-
-bin/test_data: $(test_data) 
-	$(CC) $(test_data) $(headers) -g -o $(binaryPath)/test_data
+obj/client-lib.o
 
 obj/tree.o: $(tree.o) 
 	$(CC) $(tree.o) $(headers) $(flags) $(objectPath)/tree.o
-
-obj/serialization.o: $(serialization.o) 
-	$(CC) $(serialization.o) $(headers) $(flags) $(objectPath)/serialization.o
 
 obj/entry.o: $(entry.o) 
 	$(CC) $(entry.o) $(headers) $(flags) $(objectPath)/entry.o

@@ -357,7 +357,7 @@ void **tree_get_values(struct tree_t *tree){
         i++;
     }
 
-    values[i] = NULL;
+    values[i - 1] = NULL;
     return values;
 }
 

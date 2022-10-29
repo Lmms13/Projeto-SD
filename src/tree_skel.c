@@ -1,8 +1,9 @@
 #include "sdmessage.pb-c.h"
 #include "tree.h"
 #include <message-private.h>
+#include <stdio.h>
 
-struct rtree_t *global_tree;
+struct tree_t *global_tree;
 /* Inicia o skeleton da árvore.
  * O main() do servidor deve chamar esta função antes de poder usar a
  * função invoke(). 
@@ -78,7 +79,7 @@ int invoke(struct message_t *msg){
             else{
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_GET + 1;
                 msg->content.c_type = MESSAGE_T__C_TYPE__CT_VALUE;
-                msg->content.data.data = data;
+                msg->content.data.data = data->data;
                 msg->content.data.len = data->datasize;
             }
             return 0;
@@ -100,7 +101,7 @@ int invoke(struct message_t *msg){
             return 0;
         break;
 
-        case MESSAGE_T__OPCODE__OP_GETKEYS:
+        case MESSAGE_T__OPCODE__OP_GETKEYS: ;
             char** keys = tree_get_keys(global_tree);
             if(keys == NULL){
                 printf("A arvore esta vazia!\n");
@@ -116,7 +117,7 @@ int invoke(struct message_t *msg){
             return 0;
         break;
 
-        case MESSAGE_T__OPCODE__OP_GETVALUES:
+        case MESSAGE_T__OPCODE__OP_GETVALUES: ;
             void **values = tree_get_values(global_tree);
             if(values == NULL){
                 printf("A arvore esta vazia!\n");
@@ -125,7 +126,7 @@ int invoke(struct message_t *msg){
                 return 0;
             }
             else{
-                msg->content.values = values; 
+                msg->content.values = (struct ProtobufCBinaryData *) values; 
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_GETVALUES + 1;
                 msg->content.c_type = MESSAGE_T__C_TYPE__CT_VALUES;
             }

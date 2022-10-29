@@ -1,5 +1,8 @@
 #include <network_server.h>
 #include <tree_skel.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 int main(int argc, char const *argv[]){
     if(argc != 2){

@@ -6,6 +6,9 @@
 #include <network-private.h>
 
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 /* Esta função deve:
  * - Obter o endereço do servidor (struct sockaddr_in) a base da
@@ -22,7 +25,7 @@ int network_connect(struct rtree_t *rtree){
 
     rtree->socket_num = socket(AF_INET, SOCK_STREAM, 0);
     if(rtree->socket_num < 0){
-        perror("Erro ao criar socket TCP %d", rtree->socket_num);
+        printf("Erro ao criar socket TCP %d", rtree->socket_num);
         return -1;
     }
 
@@ -34,12 +37,8 @@ int network_connect(struct rtree_t *rtree){
     }
 
     //posso colocar um print para comunicar o sucesso
-    signal(SIGPIPE, network_pipe_close);
+    signal(SIGPIPE, SIG_IGN);
     return 0;
-}
-
-void network_pipe_close(int n){
-    perror("Socket fechado de forma inesperada por uma das pontas!");
 }
 
 /* Esta função deve:
@@ -65,14 +64,14 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
     }
     message_t__pack(&msg->content, buffer);
     
-    int nbytes = write_all(descriptor, &size_net_ord, sizeof(int));
+    int nbytes = message_write_all(descriptor, &size_net_ord, sizeof(int));
     if(nbytes != sizeof(int)){
         perror("Erro ao enviar dados ao servidor");
         close(descriptor);
         return NULL;
     }
 
-    nbytes = write_all(descriptor, buffer, size);
+    nbytes = message_write_all(descriptor, buffer, size);
     if(nbytes < 0){
         perror("Erro ao enviar todos os dados ao servidor");
         close(descriptor);
@@ -81,7 +80,7 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
 
     free(buffer);
     size_net_ord = 0;
-    nbytes = read_all(descriptor, &size_net_ord, sizeof(int));
+    nbytes = message_read_all(descriptor, &size_net_ord, sizeof(int));
     if(nbytes != sizeof(int)){
         perror("Erro ao receber dados do servidor");
         close(descriptor);
@@ -90,7 +89,7 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
 
     size = ntohl(size_net_ord);
     buffer = malloc(size);
-    nbytes = read_all(descriptor, buffer, size);
+    nbytes = message_read_all(descriptor, buffer, size);
     if(nbytes < 0){
         perror("Erro ao receber todos os dados do servidor");
         close(descriptor);

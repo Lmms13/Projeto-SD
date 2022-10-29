@@ -1,9 +1,13 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <client_stub.h>
+#include <client_stub-private.h>
+#include <data.h>
+#include <entry.h>
+
 
 int main(int argc, char *argv[]){
-
     if(argc != 2){
         printf("Incluir o IP ou nome do servidor e o numero do porto TCP do servidor!\nExemplo de utilizacao: ./bin/tree-client<server>:<port>\n");
         return -1;
@@ -35,8 +39,8 @@ int main(int argc, char *argv[]){
             char *key = strtok(NULL, " ");
             char *input_data = strtok(NULL, "\n");
             if(key == NULL || input_data == NULL){
-                print("O comando put tem de incluir uma chave e dados!\n");
-                print("Exemplo: put <key> <data>\n");
+                printf("O comando put tem de incluir uma chave e dados!\n");
+                printf("Exemplo: put <key> <data>\n");
                 continue;
             }
 
@@ -52,8 +56,8 @@ int main(int argc, char *argv[]){
         else if(strcmp(token, "get") == 0){
             char *key = strtok(NULL, " ");
             if(key == NULL){
-                print("O comando get tem de incluir uma chave!\n");
-                print("Exemplo: get <key>\n");
+                printf("O comando get tem de incluir uma chave!\n");
+                printf("Exemplo: get <key>\n");
                 continue;
             }
 
@@ -66,8 +70,8 @@ int main(int argc, char *argv[]){
         else if(strcmp(token, "del") == 0){
             char *key = strtok(NULL, " ");
             if(key == NULL){
-                print("O comando del tem de incluir uma chave!\n");
-                print("Exemplo: del <key>\n");
+                printf("O comando del tem de incluir uma chave!\n");
+                printf("Exemplo: del <key>\n");
                 continue;
             }
 
@@ -109,7 +113,7 @@ int main(int argc, char *argv[]){
         }
 
         else if(strcmp(token, "getvalues") == 0){
-            struct data_t **values = rtree_get_values(tree);
+            struct data_t **values = (struct data_t **) rtree_get_values(tree);
             if(values == NULL){
                 printf("Ocorreu um erro a obter os valores!\n");
                 continue;

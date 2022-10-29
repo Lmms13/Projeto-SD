@@ -28,4 +28,12 @@ message message_t
 
         bytes data = 3;
 
+        int32 result = 4;
+
+        string key = 5;
+
+        repeated string keys = 6;
+
+        repeated bytes values = 7;
+
 };

@@ -1,6 +1,8 @@
 #ifndef _MESSAGE_PRIVATE_H
 #define _MESSAGE_PRIVATE_H
 
+#include <sdmessage.pb-c.h>
+
 typedef struct message_t{
     MessageT content;
 } message_t;

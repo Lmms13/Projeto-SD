@@ -134,7 +134,7 @@ const ProtobufCEnumDescriptor message_t__c_type__descriptor =
   message_t__c_type__value_ranges,
   NULL,NULL,NULL,NULL   /* reserved[1234] */
 };
-static const ProtobufCFieldDescriptor message_t__field_descriptors[3] =
+static const ProtobufCFieldDescriptor message_t__field_descriptors[7] =
 {
   {
     "opcode",
@@ -172,16 +172,68 @@ static const ProtobufCFieldDescriptor message_t__field_descriptors[3] =
     0,             /* flags */
     0,NULL,NULL    /* reserved1,reserved2, etc */
   },
+  {
+    "result",
+    4,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_INT32,
+    0,   /* quantifier_offset */
+    offsetof(MessageT, result),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "key",
+    5,
+    PROTOBUF_C_LABEL_NONE,
+    PROTOBUF_C_TYPE_STRING,
+    0,   /* quantifier_offset */
+    offsetof(MessageT, key),
+    NULL,
+    &protobuf_c_empty_string,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "keys",
+    6,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_STRING,
+    offsetof(MessageT, n_keys),
+    offsetof(MessageT, keys),
+    NULL,
+    &protobuf_c_empty_string,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
+  {
+    "values",
+    7,
+    PROTOBUF_C_LABEL_REPEATED,
+    PROTOBUF_C_TYPE_BYTES,
+    offsetof(MessageT, n_values),
+    offsetof(MessageT, values),
+    NULL,
+    NULL,
+    0,             /* flags */
+    0,NULL,NULL    /* reserved1,reserved2, etc */
+  },
 };
 static const unsigned message_t__field_indices_by_name[] = {
   1,   /* field[1] = c_type */
   2,   /* field[2] = data */
+  4,   /* field[4] = key */
+  5,   /* field[5] = keys */
   0,   /* field[0] = opcode */
+  3,   /* field[3] = result */
+  6,   /* field[6] = values */
 };
 static const ProtobufCIntRange message_t__number_ranges[1 + 1] =
 {
   { 1, 0 },
-  { 0, 3 }
+  { 0, 7 }
 };
 const ProtobufCMessageDescriptor message_t__descriptor =
 {
@@ -191,7 +243,7 @@ const ProtobufCMessageDescriptor message_t__descriptor =
   "MessageT",
   "",
   sizeof(MessageT),
-  3,
+  7,
   message_t__field_descriptors,
   message_t__field_indices_by_name,
   1,  message_t__number_ranges,

@@ -4,6 +4,8 @@
 #include "sdmessage.pb-c.h"
 #include "tree.h"
 
+#include <message-private.h> //alteração feita por causa do problema relacionado com os tipos MessageT / message_t
+
 /* Inicia o skeleton da árvore.
  * O main() do servidor deve chamar esta função antes de poder usar a
  * função invoke(). 

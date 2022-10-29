@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <arpa/inet.h>
 
 struct rtree_t *global_tree;
 /* Função para estabelecer uma associação entre o cliente e o servidor, 
@@ -19,8 +20,8 @@ struct rtree_t *rtree_connect(const char *address_port){
         return NULL;
     }
 
-    char *hostname = strtok(address_port, ':');
-    int port = atoi(strtok(NULL, ':'));
+    char *hostname = strtok((char*) address_port, ":");
+    int port = atoi(strtok(NULL, ":"));
 
     global_tree->socket.sin_port = htons(port);
     global_tree->socket.sin_family = AF_INET;
@@ -242,7 +243,7 @@ char **rtree_get_keys(struct rtree_t *rtree){
         return NULL;
     }
 
-    printf("%d chaves encontradas\n", sizeof(msg->content.keys) / sizeof(char*));
+    printf("%ld chaves encontradas\n", sizeof(msg->content.keys) / sizeof(char*));
 
     return msg->content.keys;
 }
@@ -270,7 +271,7 @@ void **rtree_get_values(struct rtree_t *rtree){
         return NULL;
     }
 
-    printf("%d valores encontrados\n", sizeof(msg->content.values) / sizeof(void*));
+    printf("%ld valores encontrados\n", sizeof(msg->content.values) / sizeof(void*));
 
-    return msg->content.values;
+    return (void**) msg->content.values;
 }

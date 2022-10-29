@@ -2,6 +2,8 @@
 #include <sdmessage.pb-c.h>
 
 #include <netinet/in.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 struct message_t* message_create(){
     struct message_t *msg = malloc(sizeof(struct message_t));

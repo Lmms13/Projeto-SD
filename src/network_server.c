@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <signal.h>
+#include <unistd.h>
 
 struct sockaddr_in server;
 int socket_num;
@@ -48,7 +49,7 @@ int network_server_init(short port){
     return socket_num;
 }
 
-network_abort(int n){
+void network_abort(int n){
     network_server_close();
     printf("Ctrl+C detetado. A encerrar o servidor...\n");
     exit(1);
@@ -104,8 +105,8 @@ struct message_t *network_receive(int client_socket){
 
     int nbytes, size_net_ord, size;
 
-    int size_net_ord = 0;
-    nbytes = read_all(client_socket, &size_net_ord, sizeof(int));
+    size_net_ord = 0;
+    nbytes = message_read_all(client_socket, &size_net_ord, sizeof(int));
     if(nbytes == 0){
         perror("Erro ao receber dados do cliente!");
         close(client_socket);
@@ -114,7 +115,7 @@ struct message_t *network_receive(int client_socket){
 
     size = ntohl(size_net_ord);
     uint8_t *buffer = malloc(size);
-    nbytes = read_all(client_socket, buffer, size);
+    nbytes = message_read_all(client_socket, buffer, size);
     if(nbytes < 0){
         perror("Erro ao receber todos os dados do servidor");
         close(client_socket);
@@ -143,24 +144,24 @@ int network_send(int client_socket, struct message_t *msg){
     uint8_t *buffer = malloc(size);
     if(buffer == NULL){
         perror("Erro no malloc do buf!");
-        return NULL;
+        return -1;
     }
     message_t__pack(&msg->content, buffer);
 
     message_destroy(msg);
     
-    int nbytes = write_all(client_socket, &size_net_ord, sizeof(int));
+    int nbytes = message_write_all(client_socket, &size_net_ord, sizeof(int));
     if(nbytes != sizeof(int)){
         perror("Erro ao enviar dados ao cliente!");
         close(client_socket);
-        return NULL;
+        return -1;
     }
 
-    nbytes = write_all(client_socket, buffer, size);
+    nbytes = message_write_all(client_socket, buffer, size);
     if(nbytes < 0){
         perror("Erro ao enviar todos os dados ao cliente!");
         close(client_socket);
-        return NULL;
+        return -1;
     }
 
     free(buffer);

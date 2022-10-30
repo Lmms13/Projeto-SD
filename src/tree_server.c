@@ -1,5 +1,11 @@
+// Grupo 58
+// Luís Santos 56341
+// Afonso Aleluia 56363
+// Daniel Marques 56379
+
 #include <network_server.h>
 #include <tree_skel.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -1,9 +1,15 @@
+// Grupo 58
+// Luís Santos 56341
+// Afonso Aleluia 56363
+// Daniel Marques 56379
+
 #include <message-private.h>
 #include <sdmessage.pb-c.h>
 
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 
 struct message_t* message_create(){
     struct message_t *msg = malloc(sizeof(struct message_t));
@@ -17,10 +23,11 @@ struct message_t* message_create(){
 
 void message_destroy(struct message_t* msg){
     message_t__free_unpacked(&msg->content, NULL);
-    free(msg);
+   // free(msg);
 }
 
 int message_read_all(int socket, void* buffer, int size){
+    signal(SIGPIPE, SIG_IGN);
     int count,result = 0;
     while(count < size){
         result = read(socket, buffer + count, size - count);
@@ -35,6 +42,7 @@ int message_read_all(int socket, void* buffer, int size){
 }
 
 int message_write_all(int socket, void* buffer, int size){
+    signal(SIGPIPE, SIG_IGN);
     int result = 0;
     int len = size;
     while(size > 0){

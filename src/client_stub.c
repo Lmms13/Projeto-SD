@@ -1,3 +1,8 @@
+// Grupo 58
+// Luís Santos 56341
+// Afonso Aleluia 56363
+// Daniel Marques 56379
+
 #include <client_stub.h>
 #include <client_stub-private.h>
 #include <network_client.h>
@@ -92,7 +97,7 @@ int rtree_put(struct rtree_t *rtree, struct entry_t *entry){
     printf("Entrada %s colocada na arvore, com os dados:\n", entry->key);
     printf("Valor: %s | Tamanho: %d\n", (char*) entry->value->data, entry->value->datasize);
 
-    message_destroy(msg);
+    //message_destroy(msg);
     return 0;
 }
 
@@ -129,6 +134,11 @@ struct data_t *rtree_get(struct rtree_t *rtree, char *key){
 
     struct data_t* data = data_create2(msg->content.data.len, msg->content.data.data);
 
+    if(data == NULL){
+        printf("Ocorreu um erro!\n");
+        return NULL;
+    }
+
     printf("A entrada %s tem os dados:\n", key);
     printf("Valor: %s | Tamanho: %d\n", (char*) data->data, data->datasize);
 
@@ -159,6 +169,12 @@ int rtree_del(struct rtree_t *rtree, char *key){
 
     if(msg == NULL){
         printf("Ocorreu um erro!\n");
+        return -1;
+    }
+
+    if(msg->content.opcode == MESSAGE_T__OPCODE__OP_ERROR){
+        printf("A entrada %s nao existe na arvore!\n", key);
+        message_destroy(msg);
         return -1;
     }
 
@@ -243,7 +259,7 @@ char **rtree_get_keys(struct rtree_t *rtree){
         return NULL;
     }
 
-    printf("%ld chaves encontradas\n", sizeof(msg->content.keys) / sizeof(char*));
+    printf("%ld chaves encontradas\n", (sizeof(msg->content.keys) / sizeof(char*)) -1);
 
     return msg->content.keys;
 }
@@ -271,7 +287,7 @@ void **rtree_get_values(struct rtree_t *rtree){
         return NULL;
     }
 
-    printf("%ld valores encontrados\n", sizeof(msg->content.values) / sizeof(void*));
+    printf("%ld valores encontrados\n", (sizeof(msg->content.values) / sizeof(void*)) -1);
 
     return (void**) msg->content.values;
 }

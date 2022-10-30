@@ -1,3 +1,8 @@
+// Grupo 58
+// Luís Santos 56341
+// Afonso Aleluia 56363
+// Daniel Marques 56379
+
 #include "tree_skel.h"
 #include <message-private.h>
 #include <network_server.h>
@@ -9,6 +14,7 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include <string.h>
 
 struct sockaddr_in server;
 int socket_num;
@@ -40,7 +46,7 @@ int network_server_init(short port){
     };
 
     // Faz listen
-    if (listen(socket_num, 0) < 0){
+    if (listen(socket_num, 1) < 0){
         perror("Erro ao executar listen");
         close(socket_num);
         return -1;
@@ -63,19 +69,21 @@ void network_abort(int n){
  * - Enviar a resposta ao cliente usando a função network_send.
  */
 int network_main_loop(int listening_socket){
+    signal(SIGPIPE, SIG_IGN);
     signal(SIGINT, network_abort);
     printf("A espera de um cliente...\n");
 
     struct sockaddr_in client;
     socklen_t client_size;
-    int socket, connected, result;
+    int socket, connected, value, result;
+    socket = 0;
     while(1){
-
+        printf("Sem resposta...\n"); //print para testar se o accept funcionou
         if((socket = accept(listening_socket, (struct sockaddr*) &client, &client_size)) != -1){
             printf("Um cliente foi conectado!\n");
             connected = 1;
             while(connected){
-                struct message_t*msg = network_receive(socket);
+                struct message_t *msg = network_receive(socket);
 
                 if(msg == NULL){
                     printf("A conexao com o cliente foi terminada!\n");
@@ -84,11 +92,16 @@ int network_main_loop(int listening_socket){
                     continue;
                 }
 
-                invoke(msg);
-                result = network_send(socket, msg);
-                if(result == -1){
-                    close(socket);
-                    return -1;
+                result = invoke(msg);
+                if(result == 0){
+                    value = network_send(socket, msg);
+                    if(value == -1){
+                        close(socket);
+                        continue;
+                    }
+                }
+                else{
+                    continue;
                 }
             }
         } 
@@ -96,13 +109,14 @@ int network_main_loop(int listening_socket){
     return 0;
 }
 
+
+
 /* Esta função deve:
  * - Ler os bytes da rede, a partir do client_socket indicado;
  * - De-serializar estes bytes e construir a mensagem com o pedido,
  *   reservando a memória necessária para a estrutura message_t.
  */
 struct message_t *network_receive(int client_socket){
-
     int nbytes, size_net_ord, size;
 
     size_net_ord = 0;
@@ -117,7 +131,7 @@ struct message_t *network_receive(int client_socket){
     uint8_t *buffer = malloc(size);
     nbytes = message_read_all(client_socket, buffer, size);
     if(nbytes < 0){
-        perror("Erro ao receber todos os dados do servidor");
+        perror("Erro ao receber todos os dados do cliente");
         close(client_socket);
         return NULL;
     }

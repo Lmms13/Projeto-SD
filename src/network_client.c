@@ -1,3 +1,8 @@
+// Grupo 58
+// Luís Santos 56341
+// Afonso Aleluia 56363
+// Daniel Marques 56379
+
 #include <client_stub.h>
 #include <client_stub-private.h>
 #include <network_client.h>

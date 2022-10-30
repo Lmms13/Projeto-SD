@@ -1,10 +1,16 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+// Grupo 58
+// Luís Santos 56341
+// Afonso Aleluia 56363
+// Daniel Marques 56379
+
 #include <client_stub.h>
 #include <client_stub-private.h>
 #include <data.h>
 #include <entry.h>
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 
 int main(int argc, char *argv[]){
@@ -44,7 +50,7 @@ int main(int argc, char *argv[]){
                 continue;
             }
 
-            int size = strlen(input_data)+1;
+            int size = strlen(input_data);
 
             struct data_t *data = data_create2(size, input_data);
             struct entry_t *entry = entry_create(key, data);

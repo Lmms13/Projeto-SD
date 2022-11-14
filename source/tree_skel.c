@@ -69,7 +69,8 @@ int invoke(struct message_t *msg){
             else{
                 printf("Entrada %s eliminada!\n", msg->content.key);
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_DEL + 1;
-                msg->content.c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                msg->content.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+                msg->content.result = msg->content.op_n;
             }
             return 0;
         break;
@@ -104,7 +105,8 @@ int invoke(struct message_t *msg){
             }
             else{
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_PUT + 1;
-                msg->content.c_type = MESSAGE_T__C_TYPE__CT_NONE;
+                msg->content.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+                msg->content.result = msg->content.op_n;
             }
             return 0;
         break;

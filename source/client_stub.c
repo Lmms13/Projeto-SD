@@ -94,6 +94,8 @@ int rtree_put(struct rtree_t *rtree, struct entry_t *entry){
         return -1;
     }
 
+    //implementar parte da op_n
+
     printf("Entrada %s colocada na arvore, com os dados:\n", entry->key);
     printf("Valor: %s | Tamanho: %d\n", (char*) entry->value->data, entry->value->datasize);
 
@@ -177,6 +179,8 @@ int rtree_del(struct rtree_t *rtree, char *key){
         message_destroy(msg);
         return -1;
     }
+
+    //implementar parte da op_n
 
     printf("Entrada %s eliminada da arvore\n", key);
     return 0;
@@ -288,4 +292,37 @@ void **rtree_get_values(struct rtree_t *rtree){
     printf("%ld valores encontrados\n", msg->content.n_values);
 
     return (void**) msg->content.values;
+}
+
+/* Verifica se a operação identificada por op_n foi executada.
+*/
+int rtree_verify(struct rtree_t *rtree, int op_n){
+      if(rtree == NULL){
+        return -1;
+    }
+
+    struct message_t *msg = message_create();
+    if(msg == NULL){
+        return -1;
+    }
+
+    msg->content.opcode = MESSAGE_T__OPCODE__OP_VERIFY;
+    msg->content.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+    msg->content.op_n = op_n;
+
+    msg = network_send_receive(rtree, msg);
+
+    if(msg == NULL){
+        printf("Ocorreu um erro!\n");
+        return -1;
+    }
+
+    if(msg->content.c_type == MESSAGE_T__C_TYPE__CT_NONE){
+        printf("Ocorreu um erro na verificação!\n");
+        return -1;
+    }
+
+    return msg->content.result;
+    //return 0;
+
 }

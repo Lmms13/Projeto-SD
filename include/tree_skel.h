@@ -36,4 +36,8 @@ int invoke(struct message_t *msg);
 */
 void * process_request (void *params);
 
+/* Verifica se a operação identificada por op_n foi executada.
+*/
+int verify(int op_n);
+
 #endif

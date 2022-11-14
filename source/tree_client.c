@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 
 int main(int argc, char *argv[]){
@@ -36,6 +37,7 @@ int main(int argc, char *argv[]){
         printf("height\n");
         printf("getkeys\n");
         printf("getvalues\n");
+        printf("verify <op_n>\n");
         printf("quit\n\n");
 
         fgets(input, 100, stdin);
@@ -61,8 +63,6 @@ int main(int argc, char *argv[]){
 
         else if(strcmp(token, "get") == 0){
             char *key = strtok(NULL, " \n");
-            printf("KEY %s", key);
-            printf("KEY %s\n", key);
             if(key == NULL){
                 printf("O comando get tem de incluir uma chave!\n");
                 printf("Exemplo: get <key>\n");
@@ -143,6 +143,26 @@ int main(int argc, char *argv[]){
                 free(values);
             }
             printf("-----------------------\n");
+        }
+
+        else if(strcmp(token, "verify") == 0){
+            char* input = strtok(NULL, " \n");
+            if(input == NULL || !isdigit(input)){
+                printf("O comando verify tem de incluir um numero!\n");
+                printf("Exemplo: get <op_n>\n");
+                continue;
+            }
+            int op_n = atoi(input);
+            int result = rtree_verify(tree, op_n);
+            if(result == 0){
+                printf("A operacao %d ainda nao foi executada\n", op_n);
+            }
+            else if(result == 1){
+                printf("A operacao %d ja foi executada\n", op_n);
+            }
+            else{
+                printf("Ocorreu um erro!\n");
+            }
         }
 
         else if(strcmp(token, "quit") == 0){

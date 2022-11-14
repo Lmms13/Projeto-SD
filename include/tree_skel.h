@@ -23,4 +23,17 @@ void tree_skel_destroy();
 */
 int invoke(struct message_t *msg);
 
+/* Inicia o skeleton da árvore.
+* O main() do servidor deve chamar esta função antes de poder usar a
+* função invoke().
+* A função deve lançar N threads secundárias responsáveis por atender
+* pedidos de escrita na árvore.
+* Retorna 0 (OK) ou -1 (erro, por exemplo OUT OF MEMORY)
+*/
+//int tree_skel_init(int N);
+
+/* Função da thread secundária que vai processar pedidos de escrita.
+*/
+void * process_request (void *params);
+
 #endif

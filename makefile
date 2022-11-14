@@ -22,14 +22,14 @@ tree-client = data.o entry.o message.o client_stub.o network_client.o sdmessage.
 
 headers = -I ./include
 libraries = -L ./lib
-objectPath = obj
-binaryPath = bin
+objectPath = object
+binaryPath = binary
 libraryPath = lib
-sourcePath = src
+sourcePath = source
 flags = -g -c -o
 CC = gcc 
 
-all: lib/client-lib.o bin/tree-client bin/tree-server
+all: $(libraryPath)/client-lib.o $(binaryPath)/tree-client $(binaryPath)/tree-server
 
 %.o: $(sourcePath)/%.c
 	$(CC) $(headers) -g -o $(objectPath)/$@ -c $<
@@ -37,11 +37,11 @@ all: lib/client-lib.o bin/tree-client bin/tree-server
 lib/client-lib.o: $(client-lib.o)
 	ld -r $(headers) $(addprefix $(objectPath)/,$^) -o $(libraryPath)/client-lib.o
 
-bin/tree-client: $(tree_client)
-	$(CC) $(libraryPath)/client-lib.o src/tree_client.c $(headers) $(addprefix $(objectPath)/,$^) -lprotobuf-c -g -o $(binaryPath)/tree-client
+binary/tree-client: $(tree_client)
+	$(CC) $(libraryPath)/client-lib.o $(sourcePath)/tree_client.c $(headers) $(addprefix $(objectPath)/,$^) -lprotobuf-c -g -o $(binaryPath)/tree-client
 
-bin/tree-server: $(tree-server)
-	$(CC) src/tree_server.c $(headers) $(addprefix $(objectPath)/,$^) -lprotobuf-c -g -o $(binaryPath)/tree-server
+binary/tree-server: $(tree-server)
+	$(CC) $(sourcePath)/tree_server.c $(headers) $(addprefix $(objectPath)/,$^) -lprotobuf-c -g -o $(binaryPath)/tree-server
 
 # proto: $(proto)
 # 	protoc $(proto) --c_out=.

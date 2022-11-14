@@ -71,11 +71,15 @@ struct data_t *data_dup(struct data_t *data){
     if(data == NULL || data->data == NULL || data->datasize <= 0){
         return NULL;
     }
-    struct data_t *dup = malloc(sizeof(struct data_t));
-    dup->data = malloc(data->datasize);
-    dup->datasize = data->datasize;
-    strcpy(dup->data, data->data);
-    return dup;
+    void* content = malloc(data->datasize);
+    memcpy(content, data->data, data->datasize);
+    return data_create2(data->datasize, content);
+//     struct data_t *dup = malloc(sizeof(struct data_t));
+//     dup->data = malloc(data->datasize);
+//     dup->datasize = data->datasize;
+//     dup->data = data->data;
+//    // strcpy(dup->data, data->data);
+//     return dup;
 }
 
 /* Função que substitui o conteúdo de um elemento de dados data_t.

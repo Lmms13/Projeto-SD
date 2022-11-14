@@ -7,6 +7,7 @@
 #include <tree.h>
 #include <message-private.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 struct tree_t *global_tree;
 /* Inicia o skeleton da árvore.
@@ -36,6 +37,8 @@ int invoke(struct message_t *msg){
     if(global_tree == NULL){
         return -1;
     }
+
+    printf("no invoke %d\n", msg->content.opcode);
 
     int result;
     struct data_t* data;
@@ -107,7 +110,9 @@ int invoke(struct message_t *msg){
         break;
 
         case MESSAGE_T__OPCODE__OP_GETKEYS: ;
-            char** keys = tree_get_keys(global_tree);
+            char **keys = tree_get_keys(global_tree);
+
+            int i = 0;
             if(keys == NULL){
                 printf("A arvore esta vazia!\n");
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_ERROR;
@@ -115,7 +120,12 @@ int invoke(struct message_t *msg){
                 return 0;
             }
             else{
+                msg->content.n_keys = tree_size(global_tree);
                 msg->content.keys = keys;
+                while(msg->content.keys[i] != NULL){
+                 printf("KEY: %s\n", msg->content.keys[i]);
+                 i++;
+             }
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_GETKEYS + 1;
                 msg->content.c_type = MESSAGE_T__C_TYPE__CT_KEYS;
             }
@@ -123,7 +133,7 @@ int invoke(struct message_t *msg){
         break;
 
         case MESSAGE_T__OPCODE__OP_GETVALUES: ;
-            void **values = tree_get_values(global_tree);
+            char **values = (char **)tree_get_values(global_tree);
             if(values == NULL){
                 printf("A arvore esta vazia!\n");
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_ERROR;
@@ -131,7 +141,8 @@ int invoke(struct message_t *msg){
                 return 0;
             }
             else{
-                msg->content.values = (struct ProtobufCBinaryData *) values; 
+                msg->content.n_values = tree_size(global_tree);
+                msg->content.values = values; 
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_GETVALUES + 1;
                 msg->content.c_type = MESSAGE_T__C_TYPE__CT_VALUES;
             }

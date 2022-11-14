@@ -60,14 +60,14 @@ struct message_t *network_send_receive(struct rtree_t * rtree, struct message_t 
     }
 
     int descriptor = rtree->socket_num;
-    int size = message_t__get_packed_size(&msg->content);
+    int size = message_t__get_packed_size(&(msg->content));
     int size_net_ord = htonl(size);
     uint8_t *buffer = malloc(size);
     if(buffer == NULL){
         perror("Erro no malloc do buf");
         return NULL;
     }
-    message_t__pack(&msg->content, buffer);
+    message_t__pack(&(msg->content), buffer);
     
     int nbytes = message_write_all(descriptor, &size_net_ord, sizeof(int));
     if(nbytes != sizeof(int)){

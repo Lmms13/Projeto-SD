@@ -330,6 +330,7 @@ void tree_get_keys_rec(struct tree_t *tree, char** keys, int* n){
     }
 
     tree_get_keys_rec(tree->left, keys, n);
+    keys[*n] = malloc(sizeof(char*)); 
     keys[*n] = tree->entry->key;
     (*n)++;
     tree_get_keys_rec(tree->right, keys, n);
@@ -353,11 +354,11 @@ void **tree_get_values(struct tree_t *tree){
     char** keys = tree_get_keys(tree);
 
     while(keys[i] != NULL){
-        values[i] = data_dup(tree_get(tree, keys[i]));
+        values[i] = data_dup(tree_get(tree, keys[i]))->data;
         i++;
     }
 
-    values[i - 1] = NULL;
+    values[i] = NULL;
     return values;
 }
 

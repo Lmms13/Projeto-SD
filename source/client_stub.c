@@ -139,10 +139,10 @@ struct data_t *rtree_get(struct rtree_t *rtree, char *key){
         return NULL;
     }
 
-    printf("A entrada %s tem os dados:\n", key);
-    printf("Valor: %s | Tamanho: %d\n", (char*) data->data, data->datasize);
+    // printf("A entrada %s tem os dados:\n", key);
+    // printf("Valor: %s | Tamanho: %d\n", (char*) data->data, data->datasize);
 
-    message_destroy(msg);
+    free(msg);
     return data;
 }
 
@@ -204,8 +204,6 @@ int rtree_size(struct rtree_t *rtree){
         return -1;
     }
 
-    printf("A arvore tem %d entradas\n", msg->content.result);
-
     return msg->content.result;
 }
 
@@ -259,7 +257,7 @@ char **rtree_get_keys(struct rtree_t *rtree){
         return NULL;
     }
 
-    printf("%ld chaves encontradas\n", (sizeof(msg->content.keys) / sizeof(char*)) -1);
+    printf("%ld chaves encontradas\n", msg->content.n_keys);
 
     return msg->content.keys;
 }
@@ -287,7 +285,7 @@ void **rtree_get_values(struct rtree_t *rtree){
         return NULL;
     }
 
-    printf("%ld valores encontrados\n", (sizeof(msg->content.values) / sizeof(void*)) -1);
+    printf("%ld valores encontrados\n", msg->content.n_values);
 
     return (void**) msg->content.values;
 }

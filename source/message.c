@@ -17,18 +17,18 @@ struct message_t* message_create(){
         return NULL;
     }
 
-    message_t__init(&msg->content);
+    message_t__init(&(msg->content));
     return msg;
 }
 
 void message_destroy(struct message_t* msg){
-    message_t__free_unpacked(&msg->content, NULL);
+    message_t__free_unpacked(&(msg->content), NULL);
    // free(msg);
 }
 
 int message_read_all(int socket, void* buffer, int size){
-    signal(SIGPIPE, SIG_IGN);
-    int count,result = 0;
+    int count = 0;
+    int result = 0;
     while(count < size){
         result = read(socket, buffer + count, size - count);
         if(result <= 0){
@@ -42,7 +42,6 @@ int message_read_all(int socket, void* buffer, int size){
 }
 
 int message_write_all(int socket, void* buffer, int size){
-    signal(SIGPIPE, SIG_IGN);
     int result = 0;
     int len = size;
     while(size > 0){

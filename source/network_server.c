@@ -46,7 +46,7 @@ int network_server_init(short port){
     };
 
     // Faz listen
-    if (listen(socket_num, 1) < 0){
+    if (listen(socket_num, 0) < 0){
         perror("Erro ao executar listen");
         close(socket_num);
         return -1;
@@ -88,7 +88,7 @@ int network_main_loop(int listening_socket){
                 if(msg == NULL){
                     printf("A conexao com o cliente foi terminada!\n");
                     connected = 0;
-                    close(socket);
+                    // close(socket);
                     continue;
                 }
 
@@ -121,8 +121,8 @@ struct message_t *network_receive(int client_socket){
 
     size_net_ord = 0;
     nbytes = message_read_all(client_socket, &size_net_ord, sizeof(int));
-    if(nbytes == 0){
-        perror("Erro ao receber dados do cliente!");
+    if(nbytes == -1){
+        perror("Cliente fechou o socket!");
         close(client_socket);
         return NULL;
     };
@@ -130,21 +130,18 @@ struct message_t *network_receive(int client_socket){
     size = ntohl(size_net_ord);
     uint8_t *buffer = malloc(size);
     nbytes = message_read_all(client_socket, buffer, size);
-    if(nbytes < 0){
-        perror("Erro ao receber todos os dados do cliente");
+    if(nbytes == -1){
+        perror("O cliente fechou o socket");
         close(client_socket);
         return NULL;
     }
 
     struct message_t *msg = message_create();
+
+    //teste para NULL -- close socket -- return NULL
     msg->content = *message_t__unpack(NULL, size, buffer);
     
-    if(msg->content.opcode == MESSAGE_T__OPCODE__OP_ERROR){
-        return NULL;
-    }
-    else{
-        return msg;
-    }
+    return msg;
 }
 
 /* Esta função deve:
@@ -153,16 +150,16 @@ struct message_t *network_receive(int client_socket){
  * - Enviar a mensagem serializada, através do client_socket.
  */
 int network_send(int client_socket, struct message_t *msg){
-    int size = message_t__get_packed_size(&msg->content);
+    int size = message_t__get_packed_size(&(msg->content));
     int size_net_ord = htonl(size);
     uint8_t *buffer = malloc(size);
     if(buffer == NULL){
         perror("Erro no malloc do buf!");
         return -1;
     }
-    message_t__pack(&msg->content, buffer);
+    message_t__pack(&(msg->content), buffer);
 
-    message_destroy(msg);
+    free(msg);
     
     int nbytes = message_write_all(client_socket, &size_net_ord, sizeof(int));
     if(nbytes != sizeof(int)){

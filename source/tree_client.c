@@ -60,7 +60,9 @@ int main(int argc, char *argv[]){
         }
 
         else if(strcmp(token, "get") == 0){
-            char *key = strtok(NULL, " ");
+            char *key = strtok(NULL, " \n");
+            printf("KEY %s", key);
+            printf("KEY %s\n", key);
             if(key == NULL){
                 printf("O comando get tem de incluir uma chave!\n");
                 printf("Exemplo: get <key>\n");
@@ -74,7 +76,7 @@ int main(int argc, char *argv[]){
         }
 
         else if(strcmp(token, "del") == 0){
-            char *key = strtok(NULL, " ");
+            char *key = strtok(NULL, " \n");
             if(key == NULL){
                 printf("O comando del tem de incluir uma chave!\n");
                 printf("Exemplo: del <key>\n");
@@ -86,7 +88,7 @@ int main(int argc, char *argv[]){
         }
 
         else if(strcmp(token, "size") == 0){
-            rtree_size(tree);
+            printf("A arvore tem %d entradas\n", rtree_size(tree));
             printf("-----------------------\n");
         }
 
@@ -102,13 +104,14 @@ int main(int argc, char *argv[]){
                 continue;
             }
             else{
-                for(int i = 0;keys[i] != NULL; i++){
+                int tree_size =  rtree_size(tree);
+                for(int i = 0; i < tree_size; i++){
                     if(keys[i] != NULL){
                         printf("%s\n", keys[i]);
                     }
                 }
 
-                for(int i = 0;keys[i] != NULL; i++){
+                for(int i = 0; i < tree_size; i++){
                     if(keys[i] != NULL){
                         free(keys[i]);
                     }
@@ -119,21 +122,22 @@ int main(int argc, char *argv[]){
         }
 
         else if(strcmp(token, "getvalues") == 0){
-            struct data_t **values = (struct data_t **) rtree_get_values(tree);
+            char **values = (char **) rtree_get_values(tree);
             if(values == NULL){
                 printf("Ocorreu um erro a obter os valores!\n");
                 continue;
             }
             else{
-                for(int i = 0;values[i] != NULL; i++){
+                int tree_size =  rtree_size(tree);
+                for(int i = 0; i < tree_size; i++){
                     if(values[i] != NULL){
-                        printf("%s\n", (char *)values[i]->data);
+                        printf("%s\n", values[i]);
                     }
                 }
 
-                for(int i = 0;values[i] != NULL; i++){
+                for(int i = 0; i < tree_size; i++){
                     if(values[i] != NULL){
-                        data_destroy(values[i]);
+                        free(values[i]);
                     }
                 }
                 free(values);

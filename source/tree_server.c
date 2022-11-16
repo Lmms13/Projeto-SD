@@ -11,8 +11,9 @@
 #include <string.h>
 
 int main(int argc, char const *argv[]){
-    if(argc != 2){
-        printf("Incluir o numero do porto TCP ao qual o servidor se deve associar!\nExemplo de utilizacao: ./bin/tree-server <port>\n");
+    if(argc != 3){
+        printf("Incluir o numero do porto TCP ao qual o servidor se deve associar e o numero de threads a criar!\n");
+        printf("Exemplo de utilizacao: ./bin/tree-server <port> <N>\n");
         return -1;
     }
 
@@ -22,7 +23,8 @@ int main(int argc, char const *argv[]){
         return -1;
     }
 
-    if(tree_skel_init() == -1){
+    int N = atoi(argv[2]);
+    if(tree_skel_init(N) == -1){
         printf("Ocorreu um erro\n");
         return -1;
     }

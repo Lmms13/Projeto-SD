@@ -13,7 +13,7 @@ network_client.o = include/network_client.h include/network-private.h
 network_server.o = include/network_server.h include/network-private.h
 tree_client.o = include/network_client.h include/message-private.h include/client_stub.h 
 tree_server.o = include/tree_skel.h include/network_server.h
-tree_skel.o = include/tree_skel.h
+tree_skel.o = include/tree_skel.h include/tree_skel-private.h
 #proto = src/sdmessage.proto
 
 client-lib.o = data.o entry.o sdmessage.pb-c.o message.o client_stub.o network_client.o

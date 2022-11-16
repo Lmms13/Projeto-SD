@@ -8,15 +8,27 @@
 #include <message-private.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
+#include <tree_skel-private.h>
 
 struct tree_t *global_tree;
+int last_assigned;
+struct op_proc_t *op_proc;
+struct request_t *queue_head;
+pthread_mutex_t t_lock, q_lock  = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t q_not_empty =  PTHREAD_COND_INITIALIZER;
+pthread_t thread_id;
+
 /* Inicia o skeleton da árvore.
  * O main() do servidor deve chamar esta função antes de poder usar a
  * função invoke(). 
  * Retorna 0 (OK) ou -1 (erro, por exemplo OUT OF MEMORY)
  */
-int tree_skel_init(){
+int tree_skel_init(int N){
     global_tree = tree_create();
+    //inicializar globais e as threads
+    //in_progress do op_proc com tudo a 0, malloc I guess
+    last_assigned = 1;
     if(global_tree == NULL){
         return -1;
     }
@@ -70,7 +82,8 @@ int invoke(struct message_t *msg){
                 printf("Entrada %s eliminada!\n", msg->content.key);
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_DEL + 1;
                 msg->content.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
-                msg->content.result = msg->content.op_n;
+                msg->content.op_n = last_assigned;
+                last_assigned++;
             }
             return 0;
         break;
@@ -106,7 +119,8 @@ int invoke(struct message_t *msg){
             else{
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_PUT + 1;
                 msg->content.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
-                msg->content.result = msg->content.op_n;
+                msg->content.op_n = last_assigned;
+                last_assigned++;
             }
             return 0;
         break;
@@ -151,6 +165,12 @@ int invoke(struct message_t *msg){
             return 0;
         break;
 
+        case MESSAGE_T__OPCODE__OP_VERIFY:
+            msg->content.opcode = MESSAGE_T__OPCODE__OP_VERIFY + 1;
+            msg->content.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+            msg->content.result = verify(msg->content.op_n);
+            return 0;
+        break;
 
         case MESSAGE_T__OPCODE__OP_BAD:
             return -1;
@@ -165,4 +185,14 @@ int invoke(struct message_t *msg){
         break;
     }
     return -1;
+}
+
+/* Função da thread secundária que vai processar pedidos de escrita.
+*/
+void * process_request (void *params){}
+
+/* Verifica se a operação identificada por op_n foi executada.
+*/
+int verify(int op_n){
+    return op_n < op_proc->max_proc;
 }

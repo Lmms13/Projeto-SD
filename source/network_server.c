@@ -15,6 +15,8 @@
 #include <signal.h>
 #include <unistd.h>
 #include <string.h>
+#include <poll.h>
+#include <pthread.h>
 
 struct sockaddr_in server;
 int socket_num;
@@ -77,36 +79,106 @@ int network_main_loop(int listening_socket){
     socklen_t client_size;
     int socket, connected, value, result;
     socket = 0;
-    while(1){
+
+    int set_size = 50;  // valor arbitrário, o objetivo é ser superior ao necessário
+    int desc_num = 1; //numero real de descriptors, tem de ser menor do que set_size 
+    struct pollfd desc_set[set_size];
+    struct pollfd cleanup_set[set_size]; //para limpar os valores -1 em desc_set
+
+
+    for(int i = 1; i < set_size; i++){
+        desc_set[i].fd = -1;
+    }
+
+    desc_set[0].fd = listening_socket;
+    desc_set[0].events = POLLIN;
+
+    while(poll(desc_set, desc_num, 100) >= 0){
         printf("Sem resposta...\n"); //print para testar se o accept funcionou
-        if((socket = accept(listening_socket, (struct sockaddr*) &client, &client_size)) != -1){
-            printf("Um cliente foi conectado!\n");
-            connected = 1;
-            while(connected){
+        if((desc_num < set_size) && (desc_set[0].revents & POLLIN)){
+            if(desc_set[desc_num].fd = accept(desc_set[0].fd, (struct sockaddr*) &client, &client_size) != -1){
+                desc_set[desc_num].events = POLLIN;
+                desc_num++;
+                printf("Um cliente foi conectado!\n");
+            }
+        }
+
+        for(int i = 1; i < desc_num; i++){
+            if(desc_set[i].revents & POLLIN){
                 struct message_t *msg = network_receive(socket);
 
                 if(msg == NULL){
                     printf("A conexao com o cliente foi terminada!\n");
-                    connected = 0;
-                    // close(socket);
+                    close(desc_set[i].fd);//este pode dar erro
+                    desc_set[i].fd = -1;
                     continue;
-                }
-
-                result = invoke(msg);
-                if(result == 0){
-                    value = network_send(socket, msg);
-                    if(value == -1){
-                        close(socket);
-                        continue;
-                    }
                 }
                 else{
-                    continue;
+                    result = invoke(msg);
+                    if(result == 0){
+                        value = network_send(desc_set[i].fd, msg);
+                        if(value == -1){
+                            close(desc_set[i].fd);
+                            return -1;//talvez não seja preciso dar return aqui
+                        }
+                    }
                 }
             }
-        } 
+            if(desc_set[i].revents & POLLHUP){
+                close(desc_set[i].fd);
+                desc_set[i].fd = -1;
+            }
+        }
+        //limpeza dos valores -1 de desc_set através de um array auxiliar
+        for(int i = 1; i < desc_num; i++){
+            for(int j = 1; j < desc_num; j++){
+                if(desc_set[j].fd == -1){
+                    cleanup_set[i].fd = desc_set[j].fd; 
+                    desc_set[j].fd = -1;
+                    break;
+                }  
+            }
+        }
+        for(int i = 1; i < desc_num; i++){
+            desc_set[i].fd = cleanup_set[i].fd;
+            if(cleanup_set[i].fd == -1 && cleanup_set[i-1].fd != -1){
+                desc_num = i-1;
+            }
+        }
     }
+    close(listening_socket);
     return 0;
+
+    // while(1){
+    //     printf("Sem resposta...\n"); //print para testar se o accept funcionou
+    //     if((socket = accept(listening_socket, (struct sockaddr*) &client, &client_size)) != -1){
+    //         printf("Um cliente foi conectado!\n");
+    //         connected = 1;
+    //         while(connected){
+    //             struct message_t *msg = network_receive(socket);
+
+    //             if(msg == NULL){
+    //                 printf("A conexao com o cliente foi terminada!\n");
+    //                 connected = 0;
+    //                 // close(socket);
+    //                 continue;
+    //             }
+
+    //             result = invoke(msg);
+    //             if(result == 0){
+    //                 value = network_send(socket, msg);
+    //                 if(value == -1){
+    //                     close(socket);
+    //                     continue;
+    //                 }
+    //             }
+    //             else{
+    //                 continue;
+    //             }
+    //         }
+    //     } 
+    // }
+    // return 0;
 }
 
 

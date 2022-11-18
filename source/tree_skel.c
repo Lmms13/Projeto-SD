@@ -16,8 +16,9 @@ struct tree_t *global_tree;
 struct op_proc_t *op_proc;
 struct request_t *queue_head;
 int last_assigned;
+int n_threads;
 
-pthread_t thread_id;
+pthread_t* thread_ids;
 pthread_mutex_t t_lock, q_lock, p_lock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t q_nonempty =  PTHREAD_COND_INITIALIZER;
 
@@ -36,14 +37,18 @@ int tree_skel_init(int N){
     }
 
     last_assigned = 1;
-    printf("cheguei\n");
+    n_threads = N;
     op_proc = malloc(sizeof(struct op_proc_t));
     op_proc->max_proc = 0;
     op_proc->in_progress = calloc(50, sizeof(int)); //valor arbitrário, verificar se funciona
+    
+    queue_head = malloc(sizeof(struct request_t));
     queue_head = NULL;
 
+    thread_ids = calloc(N, sizeof(pthread_t));
+
     for(int i = 0; i < N; i++){
-        if(pthread_create(&thread_id, NULL, &process_request, (void*) &queue_head) < 0){
+        if(pthread_create(&thread_ids[i], NULL, &process_request, (void*) &queue_head) < 0){
             printf("Erro a criar thread!\n");
             return -1;
         }
@@ -56,7 +61,13 @@ int tree_skel_init(int N){
  */
 void tree_skel_destroy(){
     tree_destroy(global_tree);
-    pthread_exit(&thread_id);//checka
+    for(int i = 0; i < n_threads; i++){
+        pthread_exit(&thread_ids[i]);
+    }
+    free(thread_ids);
+    free(op_proc->in_progress);
+    free(op_proc);
+    free(queue_head);
 }
 
 /* Executa uma operação na árvore (indicada pelo opcode contido em msg)
@@ -171,10 +182,6 @@ int invoke(struct message_t *msg){
             else{
                 msg->content.n_keys = tree_size(global_tree);
                 msg->content.keys = keys;
-                while(msg->content.keys[i] != NULL){
-                    printf("KEY: %s\n", msg->content.keys[i]);
-                    i++;
-             }
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_GETKEYS + 1;
                 msg->content.c_type = MESSAGE_T__C_TYPE__CT_KEYS;
             }

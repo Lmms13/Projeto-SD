@@ -77,8 +77,7 @@ int network_main_loop(int listening_socket){
 
     struct sockaddr_in client;
     socklen_t client_size;
-    int socket, connected, value, result;
-    socket = 0;
+    int value, result;
 
     int set_size = 50;  // valor arbitrário, o objetivo é ser superior ao necessário
     int desc_num = 1; //numero real de descriptors, tem de ser menor do que set_size 
@@ -92,22 +91,24 @@ int network_main_loop(int listening_socket){
 
     desc_set[0].fd = listening_socket;
     desc_set[0].events = POLLIN;
+    desc_set[0].revents = 0;
 
-    while(poll(desc_set, desc_num, 50) >= 0){
-        if((desc_num < set_size) && (desc_set[0].revents & POLLIN)){
+    while(poll(desc_set, desc_num, 10) >= 0){
+        if((desc_set[0].revents & POLLIN) && (desc_num < set_size)){
             if(desc_set[desc_num].fd = accept(desc_set[0].fd, (struct sockaddr*) &client, &client_size) != -1){
                 desc_set[desc_num].events = POLLIN;
+                desc_set[desc_num].revents = 0;
+                printf("O cliente %d foi conectado!\n", desc_num);
                 desc_num++;
-                printf("Um cliente foi conectado!\n");
             }
         }
 
         for(int i = 1; i < desc_num; i++){
             if(desc_set[i].revents & POLLIN){
-                struct message_t *msg = network_receive(socket);
+                struct message_t *msg = network_receive(desc_set[i].fd);
 
                 if(msg == NULL){
-                    printf("A conexao com o cliente foi terminada!\n");
+                    printf("A conexao com o cliente %d foi terminada!\n", i);
                     close(desc_set[i].fd);//este pode dar erro
                     desc_set[i].fd = -1;
                     continue;
@@ -118,12 +119,12 @@ int network_main_loop(int listening_socket){
                         value = network_send(desc_set[i].fd, msg);
                         if(value == -1){
                             close(desc_set[i].fd);
-                            return -1;//talvez não seja preciso dar return aqui
+                            break;
                         }
                     }
                 }
             }
-            if(desc_set[i].revents & POLLHUP){
+            if(desc_set[i].revents & POLLHUP || desc_set[i].revents & POLLERR){
                 close(desc_set[i].fd);
                 desc_set[i].fd = -1;
             }
@@ -147,37 +148,6 @@ int network_main_loop(int listening_socket){
     }
     close(listening_socket);
     return 0;
-
-    // while(1){
-    //     printf("Sem resposta...\n"); //print para testar se o accept funcionou
-    //     if((socket = accept(listening_socket, (struct sockaddr*) &client, &client_size)) != -1){
-    //         printf("Um cliente foi conectado!\n");
-    //         connected = 1;
-    //         while(connected){
-    //             struct message_t *msg = network_receive(socket);
-
-    //             if(msg == NULL){
-    //                 printf("A conexao com o cliente foi terminada!\n");
-    //                 connected = 0;
-    //                 // close(socket);
-    //                 continue;
-    //             }
-
-    //             result = invoke(msg);
-    //             if(result == 0){
-    //                 value = network_send(socket, msg);
-    //                 if(value == -1){
-    //                     close(socket);
-    //                     continue;
-    //                 }
-    //             }
-    //             else{
-    //                 continue;
-    //             }
-    //         }
-    //     } 
-    // }
-    // return 0;
 }
 
 
@@ -209,9 +179,13 @@ struct message_t *network_receive(int client_socket){
 
     struct message_t *msg = message_create();
 
-    //teste para NULL -- close socket -- return NULL
+    if(msg == NULL){
+        printf("Erro a criar a mensagem recebida do cliente!\n");
+        close(client_socket);
+        return NULL;
+    }
+
     msg->content = *message_t__unpack(NULL, size, buffer);
-    
     return msg;
 }
 

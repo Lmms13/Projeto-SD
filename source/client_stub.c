@@ -141,9 +141,6 @@ struct data_t *rtree_get(struct rtree_t *rtree, char *key){
         return NULL;
     }
 
-    // printf("A entrada %s tem os dados:\n", key);
-    // printf("Valor: %s | Tamanho: %d\n", (char*) data->data, data->datasize);
-
     free(msg);
     return data;
 }

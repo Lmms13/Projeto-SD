@@ -147,7 +147,7 @@ int main(int argc, char *argv[]){
 
         else if(strcmp(token, "verify") == 0){
             char* input = strtok(NULL, " \n");
-            if(input == NULL || !isdigit(input)){
+            if(input == NULL){
                 printf("O comando verify tem de incluir um numero!\n");
                 printf("Exemplo: get <op_n>\n");
                 continue;

@@ -41,7 +41,7 @@ binary/tree-client: $(tree_client)
 	$(CC) $(libraryPath)/client-lib.o $(sourcePath)/tree_client.c $(headers) $(addprefix $(objectPath)/,$^) -lprotobuf-c -g -o $(binaryPath)/tree-client
 
 binary/tree-server: $(tree-server)
-	$(CC) $(sourcePath)/tree_server.c $(headers) $(addprefix $(objectPath)/,$^) -lprotobuf-c -g -o $(binaryPath)/tree-server
+	$(CC) $(sourcePath)/tree_server.c $(headers) $(addprefix $(objectPath)/,$^) -lpthread -lprotobuf-c -g -o $(binaryPath)/tree-server
 
 # proto: $(proto)
 # 	protoc $(proto) --c_out=.

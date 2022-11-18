@@ -93,8 +93,7 @@ int network_main_loop(int listening_socket){
     desc_set[0].fd = listening_socket;
     desc_set[0].events = POLLIN;
 
-    while(poll(desc_set, desc_num, 100) >= 0){
-        printf("Sem resposta...\n"); //print para testar se o accept funcionou
+    while(poll(desc_set, desc_num, 50) >= 0){
         if((desc_num < set_size) && (desc_set[0].revents & POLLIN)){
             if(desc_set[desc_num].fd = accept(desc_set[0].fd, (struct sockaddr*) &client, &client_size) != -1){
                 desc_set[desc_num].events = POLLIN;

@@ -386,7 +386,7 @@ struct rtree_t *rtree_connect_head(){
     char* buffer = malloc(buf_size);
 
     //aqui é head ou 0001??
-    if(zoo_get(zh, "/chain/0001", 0, buffer, &buf_size, 0) != ZOK){
+    if(zoo_get(zh, "/chain/node0001", 0, buffer, &buf_size, 0) != ZOK){
         printf("Ocorreu um erro a obter o servidor da cabeca!\n");
         return -1;
     }
@@ -418,7 +418,7 @@ struct rtree_t *rtree_connect_tail(){
     int buf_size = 1024;
     char* buffer = malloc(buf_size);
 
-    char id[100] = "/chain/000";
+    char id[100] = "/chain/node000";
     char n[100] = "";
     sprintf(n, "%d", children_list->count);
     strcat(id, n);

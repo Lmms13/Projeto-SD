@@ -4,6 +4,7 @@
 // Daniel Marques 56379
 
 #include <network_server.h>
+#include <network-private.h>
 #include <tree_skel.h>
 
 #include <stdio.h>
@@ -11,19 +12,27 @@
 #include <string.h>
 
 int main(int argc, char const *argv[]){
-    if(argc != 3){
-        printf("Incluir o numero do porto TCP ao qual o servidor se deve associar e o numero de threads a criar!\n");
-        printf("Exemplo de utilizacao: ./bin/tree-server <port> <N>\n");
+    if(argc != 2){
+        printf("Incluir o IP e o numero da porta TCP do Zookeeper!\n");
+        printf("Exemplo de utilizacao: ./bin/tree-server <IP>:<porta>\n");
         return -1;
     }
 
-    int socket = network_server_init(atoi(argv[1]));
+    char *address = strtok((char*) argv[1], ":");
+    int port = atoi(strtok(NULL, ":"));
+
+    int socket = network_server_init(port);
     if(socket == -1){
         printf("Ocorreu um erro\n");
         return -1;
     }
 
-    int N = atoi(argv[2]);
+    if(network_zookeeper_init(address, port) == -1){
+        printf("Ocorreu um erro a iniciar o zookeeper!\n");
+        return -1;
+    }
+
+    int N = 1;
     if(tree_skel_init(N) == -1){
         printf("Ocorreu um erro\n");
         return -1;

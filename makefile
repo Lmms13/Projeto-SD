@@ -38,10 +38,10 @@ lib/client-lib.o: $(client-lib.o)
 	ld -r $(headers) $(addprefix $(objectPath)/,$^) -o $(libraryPath)/client-lib.o
 
 binary/tree-client: $(tree_client)
-	$(CC) $(libraryPath)/client-lib.o $(sourcePath)/tree_client.c $(headers) $(addprefix $(objectPath)/,$^) -lprotobuf-c -g -o $(binaryPath)/tree-client
+	$(CC) $(libraryPath)/client-lib.o $(sourcePath)/tree_client.c $(headers) $(addprefix $(objectPath)/,$^) -lprotobuf-c -lzookeeper_mt -g -o $(binaryPath)/tree-client
 
 binary/tree-server: $(tree-server)
-	$(CC) $(sourcePath)/tree_server.c $(headers) $(addprefix $(objectPath)/,$^) -lpthread -lprotobuf-c -g -o $(binaryPath)/tree-server
+	$(CC) $(sourcePath)/tree_server.c $(headers) $(addprefix $(objectPath)/,$^) -lpthread -lprotobuf-c -lzookeeper_mt -g -o $(binaryPath)/tree-server
 
 # proto: $(proto)
 # 	protoc $(proto) --c_out=.

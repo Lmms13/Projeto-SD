@@ -10,4 +10,6 @@ void network_pipe_close(int);
 
 void network_abort(int);
 
+int network_zookeeper_init(char* address, int port);
+
 #endif

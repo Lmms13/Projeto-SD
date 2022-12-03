@@ -13,8 +13,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
+#include <zookeeper/zookeeper.h>
 
 struct rtree_t *global_tree;
+struct rtree_t *head;
+struct rtree_t *tail;
+
+typedef struct String_vector zoo_string; 
+zoo_string* children_list;
+static zhandle_t *zh;
+static int is_connected;
+static char *watcher_ctx = "ZooKeeper Data Watcher";
+
 /* Função para estabelecer uma associação entre o cliente e o servidor, 
  * em que address_port é uma string no formato <hostname>:<port>.
  * Retorna NULL em caso de erro.
@@ -322,4 +332,122 @@ int rtree_verify(struct rtree_t *rtree, int op_n){
     return msg->content.result;
     //return 0;
 
+}
+
+int client_stub_zookeeper_init(char* address_port){
+    zoo_string* children_list =	(zoo_string *) malloc(sizeof(zoo_string));
+    zh = zookeeper_init(address_port, my_watcher_func, 2000, 0,0,0);
+    if(zh == NULL){
+		printf("Ocorreu um erro a conectar ao servidor Zookeeper!\n");
+	    return -1;
+	}
+
+    if(is_connected){
+        if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
+            printf("Ocorreu um erro a definir uma vigia em /chain\n");
+            return -1;
+        }
+    }
+    return 0;
+}
+
+void my_watcher_func(zhandle_t *zzh, int type, int state, const char *path, void *watcherCtx){
+	if (type == ZOO_SESSION_EVENT){
+		if (state == ZOO_CONNECTED_STATE){
+			is_connected = 1; 
+		}
+        else{
+			is_connected = 0; 
+		}
+	}
+}
+
+void client_stub_child_watcher(zhandle_t *wzh, int type, int state, const char *zpath, void *watcher_ctx){
+    int c_count = children_list->count;
+    if(state == ZOO_CONNECTED_STATE){
+		if(type == ZOO_CHILD_EVENT){
+            if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
+                printf("Ocorreu um erro a definir uma vigia em /chain\n");
+                return -1;
+            }
+
+            if(c_count < children_list->count){
+                head = rtree_connect_head();
+            }
+            else if(c_count > children_list->count){
+                tail = rtree_connect_tail();
+            }
+        }
+    }
+}
+
+struct rtree_t *rtree_connect_head(){
+    int buf_size = 1024;
+    char* buffer = malloc(buf_size);
+
+    //aqui é head ou 0001??
+    if(zoo_get(zh, "/chain/0001", 0, buffer, &buf_size, 0) != ZOK){
+        printf("Ocorreu um erro a obter o servidor da cabeca!\n");
+        return -1;
+    }
+
+    head = malloc(sizeof(struct rtree_t));
+    if(head == NULL){
+        return NULL;
+    }
+
+    char *hostname = strtok((char*) buffer, ":");
+    int port = atoi(strtok(NULL, ":"));
+
+    head->socket.sin_port = htons(port);
+    head->socket.sin_family = AF_INET;
+
+    if(inet_pton(AF_INET, hostname, &head->socket.sin_addr) < 1) {
+        printf("Erro ao converter IP da cabeca\n");
+        return NULL;
+    }
+
+    if(network_connect(head) == -1){
+        free(head);
+        return NULL;
+    }
+    return head;
+}
+
+struct rtree_t *rtree_connect_tail(){
+    int buf_size = 1024;
+    char* buffer = malloc(buf_size);
+
+    char id[100] = "/chain/000";
+    char n[100] = "";
+    sprintf(n, "%d", children_list->count);
+    strcat(id, n);
+
+    //aqui é tail ou 000n??
+    if(zoo_get(zh, id, 0, buffer, &buf_size, 0) != ZOK){
+        printf("Ocorreu um erro a obter o servidor da cauda!\n");
+        return -1;
+    }
+
+    tail = malloc(sizeof(struct rtree_t));
+    if(tail == NULL){
+        return NULL;
+    }
+
+    char *hostname = strtok((char*) buffer, ":");
+    int port = atoi(strtok(NULL, ":"));
+
+    tail->socket.sin_port = htons(port);
+    tail->socket.sin_family = AF_INET;
+
+    if(inet_pton(AF_INET, hostname, &tail->socket.sin_addr) < 1) {
+        printf("Erro ao converter IP da cauda\n");
+        return NULL;
+    }
+
+    if(network_connect(tail) == -1){
+        free(tail);
+        return NULL;
+    }
+    return tail;
 }

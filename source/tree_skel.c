@@ -376,3 +376,5 @@ int place_in_queue(struct request_t *queue, struct request_t *request){
         return place_in_queue(queue->next, request);
     }
 }
+
+int tree_skel_zookeeper_init(char* address, int port){}

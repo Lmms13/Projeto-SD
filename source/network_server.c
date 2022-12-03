@@ -8,6 +8,7 @@
 #include <network_server.h>
 #include <sdmessage.pb-c.h>
 #include <network-private.h>
+#include <tree_skel-private.h>
 
 #include <netinet/in.h>
 #include <stdio.h>
@@ -234,4 +235,12 @@ int network_send(int client_socket, struct message_t *msg){
 int network_server_close(){
     tree_skel_destroy();
     return close(socket_num);
+}
+
+int network_zookeeper_init(char* address, int port){
+    if(tree_skel_zookeeper_init(address, port) == -1){
+        printf("Ocorreu um erro a iniciar o zookeeper!\n");
+        return -1;
+    }
+    return 0;
 }

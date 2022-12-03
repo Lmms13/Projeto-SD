@@ -20,10 +20,23 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-    struct rtree_t *tree;
-    tree = rtree_connect(argv[1]);
-    if(tree == NULL){
-        printf("Ocorreu um erro a associar o cliente ao servidor!\n");
+
+    //struct rtree_t *tree;
+    if(client_stub_zookeeper_init(argv[1]) == -1){
+        printf("Ocorreu um erro a iniciar o Zookeeper!\n");
+        return -1;
+    }
+
+    struct rtree_t *head = rtree_connect_head();
+    struct rtree_t *tail = rtree_connect_tail();
+    //tree = rtree_connect(argv[1]);
+    if(head == NULL){
+        printf("Ocorreu um erro a associar o cliente ao servidor da cabeca!\n");
+        return -1;
+    }
+
+    if(tail == NULL){
+        printf("Ocorreu um erro a associar o cliente ao servidor da cauda!\n");
         return -1;
     }
 
@@ -57,7 +70,7 @@ int main(int argc, char *argv[]){
             struct data_t *data = data_create2(size, input_data);
             struct entry_t *entry = entry_create(key, data);
 
-            rtree_put(tree, entry);
+            rtree_put(head, entry);
             printf("-----------------------\n");
         }
 
@@ -69,7 +82,7 @@ int main(int argc, char *argv[]){
                 continue;
             }
 
-            struct data_t *data = rtree_get(tree, key);
+            struct data_t *data = rtree_get(tail, key);
             //fazer alguma coisa com a data
             data_destroy(data);
             printf("-----------------------\n");
@@ -83,28 +96,28 @@ int main(int argc, char *argv[]){
                 continue;
             }
 
-            rtree_del(tree, key);
+            rtree_del(head, key);
             printf("-----------------------\n");
         }
 
         else if(strcmp(token, "size") == 0){
-            printf("A arvore tem %d entradas\n", rtree_size(tree));
+            printf("A arvore tem %d entradas\n", rtree_size(tail));
             printf("-----------------------\n");
         }
 
         else if(strcmp(token, "height") == 0){
-            rtree_height(tree);
+            rtree_height(tail);
             printf("-----------------------\n");
         }
 
         else if(strcmp(token, "getkeys") == 0){
-            char **keys = rtree_get_keys(tree);
+            char **keys = rtree_get_keys(tail);
             if(keys == NULL){
                 printf("Ocorreu um erro a obter as chaves!\n");
                 continue;
             }
             else{
-                int tree_size =  rtree_size(tree);
+                int tree_size =  rtree_size(tail);
                 for(int i = 0; i < tree_size; i++){
                     if(keys[i] != NULL){
                         printf("%s\n", keys[i]);
@@ -122,13 +135,13 @@ int main(int argc, char *argv[]){
         }
 
         else if(strcmp(token, "getvalues") == 0){
-            char **values = (char **) rtree_get_values(tree);
+            char **values = (char **) rtree_get_values(tail);
             if(values == NULL){
                 printf("Ocorreu um erro a obter os valores!\n");
                 continue;
             }
             else{
-                int tree_size =  rtree_size(tree);
+                int tree_size =  rtree_size(tail);
                 for(int i = 0; i < tree_size; i++){
                     if(values[i] != NULL){
                         printf("%s\n", values[i]);
@@ -153,7 +166,7 @@ int main(int argc, char *argv[]){
                 continue;
             }
             int op_n = atoi(input);
-            int result = rtree_verify(tree, op_n);
+            int result = rtree_verify(tail, op_n);
             if(result == 0){
                 printf("A operacao %d ainda nao foi executada\n", op_n);
             }
@@ -167,8 +180,11 @@ int main(int argc, char *argv[]){
 
         else if(strcmp(token, "quit") == 0){
             printf("A terminar a execucao...\n");
-            if(rtree_disconnect(tree) == -1){
-                printf("Ocorreu um erro a desconectar!\n");
+            if(rtree_disconnect(head) == -1){
+                printf("Ocorreu um erro a desconectar do servidor da cabeca!\n");
+            }
+            if(rtree_disconnect(tail) == -1){
+                printf("Ocorreu um erro a desconectar do servidor da cauda!\n");
             }
             printf("-----------------------\n");
             break;

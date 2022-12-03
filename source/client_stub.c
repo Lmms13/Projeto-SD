@@ -96,8 +96,10 @@ int rtree_put(struct rtree_t *rtree, struct entry_t *entry){
 
     //implementar parte da op_n
 
-    printf("Entrada %s colocada na arvore, com os dados:\n", entry->key);
-    printf("Valor: %s | Tamanho: %d\n", (char*) entry->value->data, entry->value->datasize);
+    printf("Pedido de operacao colocado na fila com o numero de ordem %d\n", msg->content.op_n);
+
+    // printf("Entrada %s colocada na arvore, com os dados:\n", entry->key);
+    // printf("Valor: %s | Tamanho: %d\n", (char*) entry->value->data, entry->value->datasize);
 
     //message_destroy(msg);
     return 0;
@@ -177,9 +179,7 @@ int rtree_del(struct rtree_t *rtree, char *key){
         return -1;
     }
 
-    //implementar parte da op_n
-
-    printf("Entrada %s eliminada da arvore\n", key);
+    printf("Pedido de operacao colocado na fila com o numero de ordem %d\n", msg->content.op_n);
     return 0;
 }
 

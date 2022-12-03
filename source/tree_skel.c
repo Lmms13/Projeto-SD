@@ -106,8 +106,11 @@ int invoke(struct message_t *msg){
             request->op_n = last_assigned;
             request->key = msg->content.key;
             request->data = NULL;
-            request->message = msg;
             request->next = NULL;
+
+            msg->content.opcode = MESSAGE_T__OPCODE__OP_DEL + 1;
+            msg->content.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+            msg->content.op_n = last_assigned;
 
             lock_queue();
 
@@ -121,6 +124,7 @@ int invoke(struct message_t *msg){
 
             pthread_cond_signal(&q_nonempty);
             unlock_queue();
+            return 0;
         break;
 
         case MESSAGE_T__OPCODE__OP_GET:
@@ -152,8 +156,11 @@ int invoke(struct message_t *msg){
             request->op_n = last_assigned;
             request->key = msg->content.key;
             request->data = data;
-            request->message = msg;
             request->next = NULL;
+
+            msg->content.opcode = MESSAGE_T__OPCODE__OP_PUT + 1;
+            msg->content.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
+            msg->content.op_n = last_assigned;
 
             lock_queue();
 
@@ -167,6 +174,7 @@ int invoke(struct message_t *msg){
 
             pthread_cond_signal(&q_nonempty);
             unlock_queue();
+            return 0;
         break;
 
         case MESSAGE_T__OPCODE__OP_GETKEYS: ;
@@ -333,14 +341,9 @@ int tree_skel_put(struct request_t* request){
     
     if(result == -1){
         printf("Ocorreu um erro a colocar a entrada %s!\n", request->key);
-        request->message->content.opcode = MESSAGE_T__OPCODE__OP_ERROR;
-        request->message->content.c_type = MESSAGE_T__C_TYPE__CT_NONE;
     }
     else{
         printf("Entrada %s inserida!\n", request->key);
-        request->message->content.opcode = MESSAGE_T__OPCODE__OP_PUT + 1;
-        request->message->content.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
-        request->message->content.op_n = last_assigned;
     }
     unlock_tree();
     return result;
@@ -352,14 +355,9 @@ int tree_skel_del(struct request_t* request){
 
     if(result == -1){
         printf("Nao foi encontrada a entrada %s!\n", request->key);
-        request->message->content.opcode = MESSAGE_T__OPCODE__OP_ERROR;
-        request->message->content.c_type = MESSAGE_T__C_TYPE__CT_NONE;
     }
     else{
         printf("Entrada %s eliminada!\n", request->key);
-        request->message->content.opcode = MESSAGE_T__OPCODE__OP_DEL + 1;
-        request->message->content.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
-        request->message->content.op_n = last_assigned;
     }
     unlock_tree();
     return result;

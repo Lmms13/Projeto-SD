@@ -93,18 +93,21 @@ int network_main_loop(int listening_socket){
     desc_set[0].events = POLLIN;
     desc_set[0].revents = 0;
 
-    while(poll(desc_set, desc_num, 10) >= 0){
+    while(poll(desc_set, desc_num, -1) >= 0){
         if((desc_set[0].revents & POLLIN) && (desc_num < set_size)){
-            if(desc_set[desc_num].fd = accept(desc_set[0].fd, (struct sockaddr*) &client, &client_size) != -1){
+            if((desc_set[desc_num].fd = accept(desc_set[0].fd, (struct sockaddr*) &client, &client_size)) != -1){
                 desc_set[desc_num].events = POLLIN;
                 desc_set[desc_num].revents = 0;
-                printf("O cliente %d foi conectado!\n", desc_num);
+                printf("O cliente %d foi conectado no fd %d!\n", desc_num, desc_set[desc_num].fd);
                 desc_num++;
             }
         }
 
+        printf("vou atender %d descritores\n", desc_num -1);
         for(int i = 1; i < desc_num; i++){
+            printf("ver se descritor %d tem dados para ler\n", i);
             if(desc_set[i].revents & POLLIN){
+            printf("%d tem dados para ler\n", i);
                 struct message_t *msg = network_receive(desc_set[i].fd);
 
                 if(msg == NULL){
@@ -129,22 +132,23 @@ int network_main_loop(int listening_socket){
                 desc_set[i].fd = -1;
             }
         }
+        printf("Vou voltar ao poll com nfds = %d\n", desc_num);
         //limpeza dos valores -1 de desc_set através de um array auxiliar
-        for(int i = 1; i < desc_num; i++){
-            for(int j = 1; j < desc_num; j++){
-                if(desc_set[j].fd == -1){
-                    cleanup_set[i].fd = desc_set[j].fd; 
-                    desc_set[j].fd = -1;
-                    break;
-                }  
-            }
-        }
-        for(int i = 1; i < desc_num; i++){
-            desc_set[i].fd = cleanup_set[i].fd;
-            if(cleanup_set[i].fd == -1 && cleanup_set[i-1].fd != -1){
-                desc_num = i-1;
-            }
-        }
+        // for(int i = 1; i < desc_num; i++){
+        //     for(int j = 1; j < desc_num; j++){
+        //         if(desc_set[j].fd == -1){
+        //             cleanup_set[i].fd = desc_set[j].fd; 
+        //             desc_set[j].fd = -1;
+        //             break;
+        //         }  
+        //     }
+        // }
+        // for(int i = 1; i < desc_num; i++){
+        //     desc_set[i].fd = cleanup_set[i].fd;
+        //     if(cleanup_set[i].fd == -1 && cleanup_set[i-1].fd != -1){
+        //         desc_num = i-1;
+        //     }
+        // }
     }
     close(listening_socket);
     return 0;

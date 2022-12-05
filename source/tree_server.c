@@ -12,12 +12,14 @@
 #include <string.h>
 
 int main(int argc, char const *argv[]){
-    if(argc != 2){
-        printf("Incluir o IP e o numero da porta TCP do Zookeeper!\n");
-        printf("Exemplo de utilizacao: ./bin/tree-server <IP>:<porta>\n");
+    if(argc != 3){
+        printf("Incluir o IP e o numero da porta do servidor e do Zookeeper!\n");
+        printf("Exemplo de utilizacao: ./bin/tree-server <IP>:<porta> <IP>:<porta>\n");
         return -1;
     }
 
+    char* server_address_port = (char*) argv[1];
+    char* zoo_address_port = (char*) argv[2];
     char *address = strtok((char*) argv[1], ":");
     int port = atoi(strtok(NULL, ":"));
 
@@ -27,13 +29,13 @@ int main(int argc, char const *argv[]){
         return -1;
     }
 
-    if(network_zookeeper_init(address, port) == -1){
+    if(network_zookeeper_init(zoo_address_port) == -1){
         printf("Ocorreu um erro a iniciar o zookeeper!\n");
         return -1;
     }
 
     int N = 1;
-    if(tree_skel_init(N) == -1){
+    if(tree_skel_init(N, server_address_port) == -1){
         printf("Ocorreu um erro\n");
         return -1;
     }

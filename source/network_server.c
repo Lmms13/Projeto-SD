@@ -237,8 +237,8 @@ int network_server_close(){
     return close(socket_num);
 }
 
-int network_zookeeper_init(char* address, int port){
-    if(tree_skel_zookeeper_init(address, port) == -1){
+int network_zookeeper_init(char* address_port){
+    if(tree_skel_zookeeper_init(address_port) == -1){
         printf("Ocorreu um erro a iniciar o zookeeper!\n");
         return -1;
     }

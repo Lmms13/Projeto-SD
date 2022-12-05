@@ -336,7 +336,8 @@ int rtree_verify(struct rtree_t *rtree, int op_n){
 
 int client_stub_zookeeper_init(char* address_port){
     zoo_string* children_list =	(zoo_string *) malloc(sizeof(zoo_string));
-    zh = zookeeper_init(address_port, my_watcher_func, 2000, 0,0,0);
+    //aqui é para fazer malloc?
+    zh = zookeeper_init(address_port, client_stub_my_watcher_func, 2000, 0,0,0);
     if(zh == NULL){
 		printf("Ocorreu um erro a conectar ao servidor Zookeeper!\n");
 	    return -1;
@@ -351,7 +352,7 @@ int client_stub_zookeeper_init(char* address_port){
     return 0;
 }
 
-void my_watcher_func(zhandle_t *zzh, int type, int state, const char *path, void *watcherCtx){
+void client_stub_my_watcher_func(zhandle_t *zzh, int type, int state, const char *path, void *watcherCtx){
 	if (type == ZOO_SESSION_EVENT){
 		if (state == ZOO_CONNECTED_STATE){
 			is_connected = 1; 
@@ -368,7 +369,7 @@ void client_stub_child_watcher(zhandle_t *wzh, int type, int state, const char *
 		if(type == ZOO_CHILD_EVENT){
             if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
                 printf("Ocorreu um erro a definir uma vigia em /chain\n");
-                return -1;
+                return;
             }
 
             if(c_count < children_list->count){
@@ -388,7 +389,7 @@ struct rtree_t *rtree_connect_head(){
     //aqui é head ou 0001??
     if(zoo_get(zh, "/chain/node0001", 0, buffer, &buf_size, 0) != ZOK){
         printf("Ocorreu um erro a obter o servidor da cabeca!\n");
-        return -1;
+        return NULL;
     }
 
     head = malloc(sizeof(struct rtree_t));
@@ -426,7 +427,7 @@ struct rtree_t *rtree_connect_tail(){
     //aqui é tail ou 000n??
     if(zoo_get(zh, id, 0, buffer, &buf_size, 0) != ZOK){
         printf("Ocorreu um erro a obter o servidor da cauda!\n");
-        return -1;
+        return NULL;
     }
 
     tail = malloc(sizeof(struct rtree_t));

@@ -6,6 +6,8 @@
         "client_stub-private.h": "c",
         "unistd.h": "c",
         "client_stub.h": "c",
-        "tree_skel-private.h": "c"
+        "tree_skel-private.h": "c",
+        "limits": "c",
+        "zookeeper.h": "c"
     }
 }

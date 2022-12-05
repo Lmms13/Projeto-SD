@@ -29,14 +29,14 @@ int main(int argc, char const *argv[]){
         return -1;
     }
 
-    if(network_zookeeper_init(zoo_address_port) == -1){
-        printf("Ocorreu um erro a iniciar o zookeeper!\n");
-        return -1;
-    }
-
     int N = 1;
     if(tree_skel_init(N, server_address_port) == -1){
         printf("Ocorreu um erro\n");
+        return -1;
+    }
+
+    if(network_zookeeper_init(zoo_address_port) == -1){
+        printf("Ocorreu um erro a iniciar o zookeeper!\n");
         return -1;
     }
 

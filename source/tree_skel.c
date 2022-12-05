@@ -14,6 +14,7 @@
 #include <tree_skel-private.h>
 #include <zookeeper/zookeeper.h>
 #include <client_stub.h>  
+#include <arpa/inet.h>
 
 struct tree_t *global_tree;
 struct op_proc_t *op_proc;
@@ -32,7 +33,9 @@ static int is_connected;
 static char *watcher_ctx = "ZooKeeper Data Watcher";
 
 struct rtree_t* next_server;
+char next_server_id[120];
 char* server_address_port;
+char server_id[120];
 
 
 /* Inicia o skeleton da árvore.
@@ -69,7 +72,7 @@ int tree_skel_init(int N, char* address_port){
 
     server_address_port = address_port;
     children_list =	(zoo_string *) malloc(sizeof(zoo_string));
-    //zh = malloc(sizeof(zhandle_t));
+    // zh = malloc(sizeof(struct _zhandle));
 
     return 0;
 }
@@ -79,8 +82,8 @@ int tree_skel_init(int N, char* address_port){
 void tree_skel_destroy(){
     tree_destroy(global_tree);
     for(int i = 0; i < n_threads; i++){
-        pthread_exit(&thread_ids[i]);
-        // pthread_detach(thread_ids[i]);
+        //pthread_exit(&thread_ids[i]);
+        pthread_detach(thread_ids[i]);
     }
     free(thread_ids);
     free(op_proc->in_progress);
@@ -364,6 +367,7 @@ int tree_skel_put(struct request_t* request){
     }
     else{
         printf("Entrada %s inserida!\n", request->key);
+        rtree_put(next_server, request->key);
     }
     unlock_tree();
     return result;
@@ -378,6 +382,7 @@ int tree_skel_del(struct request_t* request){
     }
     else{
         printf("Entrada %s eliminada!\n", request->key);
+        rtree_del(next_server, request->key);
     }
     unlock_tree();
     return result;
@@ -427,11 +432,8 @@ int tree_skel_zookeeper_init(char* address_port){
             strcat(node_path,"/node"); 
             int new_path_len = 1024;
             char* new_path = malloc (new_path_len);
-            //data a NULL? ip:porto
 
-            char* new_address_port = "";
-            
-            if(ZOK != zoo_create(zh, node_path, address_port, 50, &ZOO_OPEN_ACL_UNSAFE, ZOO_EPHEMERAL | ZOO_SEQUENCE, new_path, new_path_len)){
+            if(ZOK != zoo_create(zh, node_path, server_address_port, 120, &ZOO_OPEN_ACL_UNSAFE, ZOO_EPHEMERAL | ZOO_SEQUENCE, new_path, new_path_len)){
                 printf("Ocorreu um erro a criar o node %s\n", node_path);
                 return -1;
             }
@@ -439,7 +441,8 @@ int tree_skel_zookeeper_init(char* address_port){
                 printf("Node criado com o path %s \n", new_path);
             }
 
-            char next_id[120] = "/chain/node9999";  
+            strcpy(server_id, new_path);
+            char next_id[120] = "/chain/node9999999999";  
             char child[120] = "";
             if(ZOK != zoo_wget_children(zh, "/chain", &tree_skel_child_watcher, watcher_ctx, children_list)) {
 				printf("Ocorreu um erro a definir uma vigia aos filhos de /chain\n");
@@ -453,8 +456,9 @@ int tree_skel_zookeeper_init(char* address_port){
                         }
                     }
                 }
-                if(strcmp(next_id, "/chain/node9999") == 0){
+                if(strcmp(next_id, "/chain/node9999999999") == 0){
                     next_server = NULL;
+                    memset(next_server_id, 0, strlen(next_server_id));
                 }
                 else{
                     int buf_size = 1024;
@@ -463,8 +467,10 @@ int tree_skel_zookeeper_init(char* address_port){
                         printf("Ocorreu um erro a obter o node %s!\n", next_id);
                         return -1;
                     }
-                    
                     next_server = rtree_connect(buffer);
+                    strcpy(next_server_id, next_id);
+
+                    free(buffer);
                 }
             }
         }
@@ -484,5 +490,47 @@ void tree_skel_my_watcher_func(zhandle_t *zzh, int type, int state, const char *
 }
 
 void tree_skel_child_watcher(zhandle_t *wzh, int type, int state, const char *zpath, void *watcher_ctx){
-    
+    if(state == ZOO_CONNECTED_STATE){
+		if(type == ZOO_CHILD_EVENT){
+            char next_id[120] = "/chain/node9999999999";  
+            char child[120] = "";
+            if(ZOK != zoo_wget_children(zh, "/chain", &tree_skel_child_watcher, watcher_ctx, children_list)){
+				printf("Ocorreu um erro a definir uma vigia aos filhos de /chain\n");
+			}
+            else{
+                for(int i = 0; i < children_list->count; i++){
+                    strcpy(child, children_list->data[i]);
+                    if(strcmp(child, server_id) > 0){
+                        if(strcmp(child, next_id) < 0){
+                            strcpy(next_id, child);
+                        }
+                    }
+                }
+                if(strcmp(next_id, "/chain/node9999999999") != 0){
+                    int buf_size = 1024;
+                    char* buffer = malloc(buf_size);
+                    if(zoo_get(zh, next_id, 0, buffer, &buf_size, 0) != ZOK){
+                        printf("Ocorreu um erro a obter o node %s!\n", next_id);
+                        return;
+                    }
+
+                    if(next_server_id != NULL){
+                        if(strcmp(buffer, next_server_id) != 0){
+                            rtree_disconnect(next_server);
+                            next_server = rtree_connect(buffer);
+                            strcpy(next_server_id, buffer);
+                        } 
+                    }
+                    else{
+                        next_server = rtree_connect(buffer);
+                        strcpy(next_server_id, buffer);
+                    }
+                    free(buffer);
+                }
+            }
+            if(ZOK != zoo_wget_children(zh, "/chain", &tree_skel_child_watcher, watcher_ctx, children_list)){
+				printf("Ocorreu um erro a definir uma vigia aos filhos de /chain\n");
+			}
+        }
+    }
 }

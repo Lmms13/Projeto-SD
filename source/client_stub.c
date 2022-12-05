@@ -342,12 +342,18 @@ int client_stub_zookeeper_init(char* address_port){
 		printf("Ocorreu um erro a conectar ao servidor Zookeeper!\n");
 	    return -1;
 	}
+    else{
+        is_connected = 1;
+    }
 
     if(is_connected){
         if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
             printf("Ocorreu um erro a definir uma vigia em /chain\n");
             return -1;
         }
+
+        head = rtree_connect_head();
+        tail = rtree_connect_tail();
     }
     return 0;
 }
@@ -364,7 +370,6 @@ void client_stub_my_watcher_func(zhandle_t *zzh, int type, int state, const char
 }
 
 void client_stub_child_watcher(zhandle_t *wzh, int type, int state, const char *zpath, void *watcher_ctx){
-    int c_count = children_list->count;
     if(state == ZOO_CONNECTED_STATE){
 		if(type == ZOO_CHILD_EVENT){
             if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
@@ -372,22 +377,32 @@ void client_stub_child_watcher(zhandle_t *wzh, int type, int state, const char *
                 return;
             }
 
-            if(c_count < children_list->count){
-                head = rtree_connect_head();
-            }
-            else if(c_count > children_list->count){
-                tail = rtree_connect_tail();
+            head = rtree_connect_head();
+            tail = rtree_connect_tail();
+
+            if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
+                printf("Ocorreu um erro a definir uma vigia em /chain\n");
+                return;
             }
         }
     }
 }
 
 struct rtree_t *rtree_connect_head(){
+    char min[120] = "/chain/node9999";
+    char child[120] = "";
+
     int buf_size = 1024;
     char* buffer = malloc(buf_size);
 
-    //aqui é head ou 0001??
-    if(zoo_get(zh, "/chain/node0001", 0, buffer, &buf_size, 0) != ZOK){
+    for(int i = 0; i < children_list->count; i++){
+        strcpy(child, children_list->data[i]);
+        if(strcmp(child, min) < 0){
+            strcpy(min, child);
+        } 
+    }
+
+    if(zoo_get(zh, min, 0, buffer, &buf_size, 0) != ZOK){
         printf("Ocorreu um erro a obter o servidor da cabeca!\n");
         return NULL;
     }
@@ -416,16 +431,20 @@ struct rtree_t *rtree_connect_head(){
 }
 
 struct rtree_t *rtree_connect_tail(){
+    char max[120] = "/chain/node0000";
+    char child[120] = "";
+
     int buf_size = 1024;
     char* buffer = malloc(buf_size);
 
-    char id[100] = "/chain/node000";
-    char n[100] = "";
-    sprintf(n, "%d", children_list->count);
-    strcat(id, n);
+    for(int i = 0; i < children_list->count; i++){
+        strcpy(child, children_list->data[i]);
+        if(strcmp(child, max) > 0){
+            strcpy(max, child);
+        } 
+    }
 
-    //aqui é tail ou 000n??
-    if(zoo_get(zh, id, 0, buffer, &buf_size, 0) != ZOK){
+    if(zoo_get(zh, max, 0, buffer, &buf_size, 0) != ZOK){
         printf("Ocorreu um erro a obter o servidor da cauda!\n");
         return NULL;
     }

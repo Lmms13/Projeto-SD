@@ -438,7 +438,6 @@ int tree_skel_zookeeper_init(char* address_port){
             int new_path_len = 1024;
             char* new_path = malloc (new_path_len);
 
-            printf("CHECKA %s\n", server_address_port);
             if(ZOK != zoo_create(zh, node_path, server_address_port, 120, &ZOO_OPEN_ACL_UNSAFE, ZOO_EPHEMERAL | ZOO_SEQUENCE, new_path, new_path_len)){
                 printf("Ocorreu um erro a criar o node %s\n", node_path);
                 return -1;

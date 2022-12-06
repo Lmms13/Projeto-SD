@@ -104,9 +104,7 @@ int network_main_loop(int listening_socket){
             }
         }
 
-        printf("vou atender %d descritores\n", desc_num -1);
         for(int i = 1; i < desc_num; i++){
-            printf("ver se descritor %d tem dados para ler\n", i);
             if(desc_set[i].revents & POLLIN){
             printf("%d tem dados para ler\n", i);
                 struct message_t *msg = network_receive(desc_set[i].fd);
@@ -133,7 +131,6 @@ int network_main_loop(int listening_socket){
                 desc_set[i].fd = -1;
             }
         }
-        printf("Vou voltar ao poll com nfds = %d\n", desc_num);
         //limpeza dos valores -1 de desc_set através de um array auxiliar
         // for(int i = 1; i < desc_num; i++){
         //     for(int j = 1; j < desc_num; j++){

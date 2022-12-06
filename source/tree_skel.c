@@ -203,7 +203,7 @@ int invoke(struct message_t *msg){
         case MESSAGE_T__OPCODE__OP_GETKEYS: ;
             char **keys = tree_get_keys(global_tree);
 
-            int i = 0;
+            //int i = 0;
             if(keys == NULL){
                 printf("A arvore esta vazia!\n");
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_ERROR;
@@ -367,7 +367,10 @@ int tree_skel_put(struct request_t* request){
     }
     else{
         printf("Entrada %s inserida!\n", request->key);
-        rtree_put(next_server, request->key);
+        if(next_server != NULL){
+            struct entry_t *entry = entry_create(request->key, request->data);
+            rtree_put(next_server, entry);
+        }
     }
     unlock_tree();
     return result;
@@ -382,7 +385,9 @@ int tree_skel_del(struct request_t* request){
     }
     else{
         printf("Entrada %s eliminada!\n", request->key);
-        rtree_del(next_server, request->key);
+        if(next_server != NULL){
+            rtree_del(next_server, request->key);
+        }
     }
     unlock_tree();
     return result;
@@ -433,6 +438,7 @@ int tree_skel_zookeeper_init(char* address_port){
             int new_path_len = 1024;
             char* new_path = malloc (new_path_len);
 
+            printf("CHECKA %s\n", server_address_port);
             if(ZOK != zoo_create(zh, node_path, server_address_port, 120, &ZOO_OPEN_ACL_UNSAFE, ZOO_EPHEMERAL | ZOO_SEQUENCE, new_path, new_path_len)){
                 printf("Ocorreu um erro a criar o node %s\n", node_path);
                 return -1;

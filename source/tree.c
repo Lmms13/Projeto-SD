@@ -125,7 +125,12 @@ int tree_del(struct tree_t *tree, char *key){
     int comp = strcmp(key, tree->entry->key);
 
     if(comp == 0){
-        tree_destroy(tree);
+        struct tree_t* replacement_tree = tree_find_nearest(tree); 
+        tree_del_from_prev(tree, replacement_tree->entry->key); 
+        entry_destroy(tree->entry);
+        tree->entry = entry_dup(replacement_tree->entry);
+        printf("destroying %s\n", replacement_tree->entry->key);
+        tree_destroy(replacement_tree);
         return 0;
     }
     
@@ -135,7 +140,7 @@ int tree_del(struct tree_t *tree, char *key){
                 if(tree->left->right == NULL && tree->left->left == NULL){
                     printf("destroying %s\n", tree->left->entry->key);
                     tree_destroy(tree->left);
-                    tree->left == NULL;
+                    tree->left = NULL;
                 }
                 else{
                     struct tree_t* replacement_tree = tree_find_nearest(tree->left); 
@@ -144,7 +149,6 @@ int tree_del(struct tree_t *tree, char *key){
                     tree->left->entry = entry_dup(replacement_tree->entry);
                     printf("destroying %s\n", replacement_tree->entry->key);
                     tree_destroy(replacement_tree);
-
                 }
                 return 0;
             }
@@ -162,7 +166,7 @@ int tree_del(struct tree_t *tree, char *key){
                 if(tree->right->right == NULL && tree->right->left == NULL){
                     printf("destroying %s\n", tree->right->entry->key);
                     tree_destroy(tree->right);
-                    tree->right == NULL;
+                    tree->right = NULL;
                 }
                 else{
                     struct tree_t* replacement_tree = tree_find_nearest(tree->right); 
@@ -289,6 +293,9 @@ int tree_height(struct tree_t *tree){
     if(tree == NULL){
         return 0;
     }
+    else if(tree->entry == NULL){
+        return 0;
+    }
     else{
         int left = tree_height(tree->left) + 1;
         int right = tree_height(tree->right) + 1;
@@ -311,6 +318,10 @@ char **tree_get_keys(struct tree_t *tree){
         return NULL;
     }
 
+    if(tree->entry == NULL){
+        return NULL;
+    }
+
     char** keys = malloc(sizeof(char*) * ((tree_size(tree) + 1)));
 
     if(keys == NULL){
@@ -325,7 +336,7 @@ char **tree_get_keys(struct tree_t *tree){
 
 
 void tree_get_keys_rec(struct tree_t *tree, char** keys, int* n){
-    if(tree == NULL || keys == NULL){
+    if(tree == NULL || keys == NULL || tree->entry == NULL){
         return;
     }
 
@@ -342,6 +353,10 @@ void tree_get_keys_rec(struct tree_t *tree, char** keys, int* n){
  */
 void **tree_get_values(struct tree_t *tree){
     if(tree == NULL){
+        return NULL;
+    }
+
+    if(tree->entry == NULL){
         return NULL;
     }
 

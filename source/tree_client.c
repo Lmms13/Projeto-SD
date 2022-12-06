@@ -21,6 +21,7 @@ int main(int argc, char *argv[]){
     }
 
 
+
     //struct rtree_t *tree;
     if(client_stub_zookeeper_init(argv[1]) == -1){
         printf("Ocorreu um erro a iniciar o Zookeeper!\n");
@@ -83,7 +84,9 @@ int main(int argc, char *argv[]){
             }
 
             struct data_t *data = rtree_get(tail, key);
-            //fazer alguma coisa com a data
+            if(data != NULL){
+                printf("Chave %s tem valor %s\n", key, (char*) data->data);
+            }
             data_destroy(data);
             printf("-----------------------\n");
         }
@@ -176,6 +179,7 @@ int main(int argc, char *argv[]){
             else{
                 printf("Ocorreu um erro!\n");
             }
+            printf("-----------------------\n");
         }
 
         else if(strcmp(token, "quit") == 0){

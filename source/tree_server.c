@@ -18,7 +18,8 @@ int main(int argc, char const *argv[]){
         return -1;
     }
 
-    char* server_address_port = (char*) argv[1];
+    char* server_address_port = malloc(sizeof(char) * 120);
+    strcpy(server_address_port, argv[1]);
     char* zoo_address_port = (char*) argv[2];
     char *address = strtok((char*) argv[1], ":");
     int port = atoi(strtok(NULL, ":"));

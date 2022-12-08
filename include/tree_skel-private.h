@@ -3,8 +3,8 @@
 // Afonso Aleluia 56363
 // Daniel Marques 56379
 
-#ifndef _TREE_PRIVATE_H
-#define _TREE_PRIVATE_H
+#ifndef _TREE_SKEL_PRIVATE_H
+#define _TREE_SKEL_PRIVATE_H
 
 #include <zookeeper/zookeeper.h>
 #include <netinet/in.h>

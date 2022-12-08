@@ -8,6 +8,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /* Função que cria uma entry, reservando a memória necessária para a
  * estrutura e inicializando os campos key e value, respetivamente, com a

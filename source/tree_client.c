@@ -20,8 +20,6 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-
-
     //struct rtree_t *tree;
     if(client_stub_zookeeper_init(argv[1]) == -1){
         printf("Ocorreu um erro a iniciar o Zookeeper!\n");

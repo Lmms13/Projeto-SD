@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <stdio.h>
 
 /* Função para criar uma nova árvore tree vazia.
@@ -60,7 +61,10 @@ int tree_put(struct tree_t *tree, char *key, struct data_t *value){
     strcpy(dup_key, key);
     struct entry_t *new_entry = entry_create(dup_key, data_dup(value));
 
+    // printf("TREE SIZE %d\n", tree_size(tree));
+
     if(tree->entry == NULL){
+        printf("aqui\n");
         tree->entry = new_entry;
         return 0;
     }

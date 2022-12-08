@@ -407,6 +407,8 @@ struct rtree_t *rtree_connect_head(){
     char head_path[120] = "/chain/";
     strcat(head_path, min);
 
+    printf("HEAD PATH %s\n", head_path);
+
     if(zoo_get(zh, head_path, 0, buffer, &buf_size, 0) != ZOK){
         printf("Ocorreu um erro a obter o servidor da cabeca!\n");
         return NULL;
@@ -451,6 +453,8 @@ struct rtree_t *rtree_connect_tail(){
 
     char tail_path[120] = "/chain/";
     strcat(tail_path, max);
+
+    printf("TAIL PATH %s\n", tail_path);
 
     if(zoo_get(zh, tail_path, 0, buffer, &buf_size, 0) != ZOK){
         printf("Ocorreu um erro a obter o servidor da cauda!\n");

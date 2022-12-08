@@ -77,6 +77,7 @@ int network_main_loop(int listening_socket){
     printf("A espera de um cliente...\n");
 
     struct sockaddr_in client;
+    memset(&client, 0, sizeof(struct sockaddr_in));
     socklen_t client_size;
     int value, result;
 

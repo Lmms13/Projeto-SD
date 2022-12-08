@@ -129,6 +129,11 @@ int tree_del(struct tree_t *tree, char *key){
     int comp = strcmp(key, tree->entry->key);
 
     if(comp == 0){
+        if(tree_size(tree) == 1){
+            entry_destroy(tree->entry);
+            tree->entry = NULL;
+            return 0;
+        }
         struct tree_t* replacement_tree = tree_find_nearest(tree); 
         tree_del_from_prev(tree, replacement_tree->entry->key); 
         entry_destroy(tree->entry);

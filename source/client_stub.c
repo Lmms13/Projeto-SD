@@ -14,10 +14,11 @@
 #include <stdlib.h>
 #include <arpa/inet.h>
 #include <zookeeper/zookeeper.h>
+#include <unistd.h>
 
 struct rtree_t *global_tree;
-struct rtree_t *head;
-struct rtree_t *tail;
+// struct rtree_t *head;
+// struct rtree_t *tail;
 
 typedef struct String_vector zoo_string; 
 zoo_string* children_list;
@@ -66,7 +67,7 @@ int rtree_disconnect(struct rtree_t *rtree){
         return -1;
     }
 
-    free(global_tree);
+    free(rtree);
     return 0;
 }
 
@@ -104,15 +105,21 @@ int rtree_put(struct rtree_t *rtree, struct entry_t *entry){
         return -1;
     }
 
-    //implementar parte da op_n
+    //sleep(1);
 
-    printf("Pedido de operacao colocado na fila com o numero de ordem %d\n", msg->content.op_n);
+    //if(!rtree_verify(rtree, msg->content.op_n)){
+    //    rtree_put(rtree, entry);
+    //}
+    //else{
+        // printf("Pedido de operacao colocado na fila com o numero de ordem %d\n", msg->content.op_n);
+   // }
+
 
     // printf("Entrada %s colocada na arvore, com os dados:\n", entry->key);
     // printf("Valor: %s | Tamanho: %d\n", (char*) entry->value->data, entry->value->datasize);
 
     //message_destroy(msg);
-    return 0;
+    return msg->content.op_n;
 }
 
 /* Função para obter um elemento da árvore.
@@ -189,8 +196,8 @@ int rtree_del(struct rtree_t *rtree, char *key){
         return -1;
     }
 
-    printf("Pedido de operacao colocado na fila com o numero de ordem %d\n", msg->content.op_n);
-    return 0;
+   // printf("Pedido de operacao colocado na fila com o numero de ordem %d\n", msg->content.op_n);
+    return msg->content.op_n;
 }
 
 /* Devolve o número de elementos contidos na árvore.
@@ -334,152 +341,152 @@ int rtree_verify(struct rtree_t *rtree, int op_n){
 
 }
 
-int client_stub_zookeeper_init(char* address_port){
-    children_list =	(zoo_string *) malloc(sizeof(zoo_string));
-    //aqui é para fazer malloc?
+// int client_stub_zookeeper_init(char* address_port){
+//     children_list =	(zoo_string *) malloc(sizeof(zoo_string));
+//     //aqui é para fazer malloc?
 
-    zh = zookeeper_init(address_port, client_stub_my_watcher_func, 2000, 0,0,0);
-    if(zh == NULL){
-		printf("Ocorreu um erro a conectar ao servidor Zookeeper!\n");
-	    return -1;
-	}
-    else{
-        is_connected = 1;
-    }
+//     zh = zookeeper_init(address_port, client_stub_my_watcher_func, 2000, 0,0,0);
+//     if(zh == NULL){
+// 		printf("Ocorreu um erro a conectar ao servidor Zookeeper!\n");
+// 	    return -1;
+// 	}
+//     else{
+//         is_connected = 1;
+//     }
 
-    if(is_connected){
-        if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
-            printf("Ocorreu um erro a definir uma vigia em /chain\n");
-            return -1;
-        }
+//     if(is_connected){
+//         if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
+//             printf("Ocorreu um erro a definir uma vigia em /chain\n");
+//             return -1;
+//         }
 
 
-        head = rtree_connect_head();
-        tail = rtree_connect_tail();
-    }
-    return 0;
-}
+//         head = rtree_connect_head();
+//         tail = rtree_connect_tail();
+//     }
+//     return 0;
+// }
 
-void client_stub_my_watcher_func(zhandle_t *zzh, int type, int state, const char *path, void *watcherCtx){
-	if (type == ZOO_SESSION_EVENT){
-		if (state == ZOO_CONNECTED_STATE){
-			is_connected = 1; 
-		}
-        else{
-			is_connected = 0; 
-		}
-	}
-}
+// void client_stub_my_watcher_func(zhandle_t *zzh, int type, int state, const char *path, void *watcherCtx){
+// 	if (type == ZOO_SESSION_EVENT){
+// 		if (state == ZOO_CONNECTED_STATE){
+// 			is_connected = 1; 
+// 		}
+//         else{
+// 			is_connected = 0; 
+// 		}
+// 	}
+// }
 
-void client_stub_child_watcher(zhandle_t *wzh, int type, int state, const char *zpath, void *watcher_ctx){
-    if(state == ZOO_CONNECTED_STATE){
-		if(type == ZOO_CHILD_EVENT){
-            if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
-                printf("Ocorreu um erro a definir uma vigia em /chain\n");
-                return;
-            }
+// void client_stub_child_watcher(zhandle_t *wzh, int type, int state, const char *zpath, void *watcher_ctx){
+//     if(state == ZOO_CONNECTED_STATE){
+// 		if(type == ZOO_CHILD_EVENT){
+//             if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
+//                 printf("Ocorreu um erro a definir uma vigia em /chain\n");
+//                 return;
+//             }
 
-            head = rtree_connect_head();
-            tail = rtree_connect_tail();
+//             head = rtree_connect_head();
+//             tail = rtree_connect_tail();
 
-            if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
-                printf("Ocorreu um erro a definir uma vigia em /chain\n");
-                return;
-            }
-        }
-    }
-}
+//             if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
+//                 printf("Ocorreu um erro a definir uma vigia em /chain\n");
+//                 return;
+//             }
+//         }
+//     }
+// }
 
-struct rtree_t *rtree_connect_head(){
-    char min[120] = "node9999999999";
-    char child[120] = "";
+// struct rtree_t *rtree_connect_head(){
+//     char min[120] = "node9999999999";
+//     char child[120] = "";
 
-    int buf_size = 1024;
-    char* buffer = malloc(buf_size);
+//     int buf_size = 1024;
+//     char* buffer = malloc(buf_size);
 
-    for(int i = 0; i < children_list->count; i++){
-        strcpy(child, children_list->data[i]);
-        if(strcmp(child, min) < 0){
-            strcpy(min, child);
-        } 
-    }
+//     for(int i = 0; i < children_list->count; i++){
+//         strcpy(child, children_list->data[i]);
+//         if(strcmp(child, min) < 0){
+//             strcpy(min, child);
+//         } 
+//     }
 
-    char head_path[120] = "/chain/";
-    strcat(head_path, min);
+//     char head_path[120] = "/chain/";
+//     strcat(head_path, min);
 
-    printf("HEAD PATH %s\n", head_path);
+//     printf("HEAD PATH %s\n", head_path);
 
-    if(zoo_get(zh, head_path, 0, buffer, &buf_size, 0) != ZOK){
-        printf("Ocorreu um erro a obter o servidor da cabeca!\n");
-        return NULL;
-    }
+//     if(zoo_get(zh, head_path, 0, buffer, &buf_size, 0) != ZOK){
+//         printf("Ocorreu um erro a obter o servidor da cabeca!\n");
+//         return NULL;
+//     }
 
-    head = malloc(sizeof(struct rtree_t));
-    if(head == NULL){
-        return NULL;
-    }
+//     head = malloc(sizeof(struct rtree_t));
+//     if(head == NULL){
+//         return NULL;
+//     }
 
-    char *hostname = strtok((char*) buffer, ":");
-    int port = atoi(strtok(NULL, ":"));
+//     char *hostname = strtok((char*) buffer, ":");
+//     int port = atoi(strtok(NULL, ":"));
 
-    head->socket.sin_port = htons(port);
-    head->socket.sin_family = AF_INET;
+//     head->socket.sin_port = htons(port);
+//     head->socket.sin_family = AF_INET;
 
-    if(inet_pton(AF_INET, hostname, &head->socket.sin_addr) < 1) {
-        printf("Erro ao converter IP da cabeca\n");
-        return NULL;
-    }
+//     if(inet_pton(AF_INET, hostname, &head->socket.sin_addr) < 1) {
+//         printf("Erro ao converter IP da cabeca\n");
+//         return NULL;
+//     }
 
-    if(network_connect(head) == -1){
-        free(head);
-        return NULL;
-    }
-    return head;
-}
+//     if(network_connect(head) == -1){
+//         free(head);
+//         return NULL;
+//     }
+//     return head;
+// }
 
-struct rtree_t *rtree_connect_tail(){
-    char max[120] = "node0000000000";
-    char child[120] = "";
+// struct rtree_t *rtree_connect_tail(){
+//     char max[120] = "node0000000000";
+//     char child[120] = "";
 
-    int buf_size = 1024;
-    char* buffer = malloc(buf_size);
+//     int buf_size = 1024;
+//     char* buffer = malloc(buf_size);
 
-    for(int i = 0; i < children_list->count; i++){
-        strcpy(child, children_list->data[i]);
-        if(strcmp(child, max) > 0){
-            strcpy(max, child);
-        } 
-    }
+//     for(int i = 0; i < children_list->count; i++){
+//         strcpy(child, children_list->data[i]);
+//         if(strcmp(child, max) > 0){
+//             strcpy(max, child);
+//         } 
+//     }
 
-    char tail_path[120] = "/chain/";
-    strcat(tail_path, max);
+//     char tail_path[120] = "/chain/";
+//     strcat(tail_path, max);
 
-    printf("TAIL PATH %s\n", tail_path);
+//     printf("TAIL PATH %s\n", tail_path);
 
-    if(zoo_get(zh, tail_path, 0, buffer, &buf_size, 0) != ZOK){
-        printf("Ocorreu um erro a obter o servidor da cauda!\n");
-        return NULL;
-    }
+//     if(zoo_get(zh, tail_path, 0, buffer, &buf_size, 0) != ZOK){
+//         printf("Ocorreu um erro a obter o servidor da cauda!\n");
+//         return NULL;
+//     }
 
-    tail = malloc(sizeof(struct rtree_t));
-    if(tail == NULL){
-        return NULL;
-    }
+//     tail = malloc(sizeof(struct rtree_t));
+//     if(tail == NULL){
+//         return NULL;
+//     }
 
-    char *hostname = strtok((char*) buffer, ":");
-    int port = atoi(strtok(NULL, ":"));
+//     char *hostname = strtok((char*) buffer, ":");
+//     int port = atoi(strtok(NULL, ":"));
 
-    tail->socket.sin_port = htons(port);
-    tail->socket.sin_family = AF_INET;
+//     tail->socket.sin_port = htons(port);
+//     tail->socket.sin_family = AF_INET;
 
-    if(inet_pton(AF_INET, hostname, &tail->socket.sin_addr) < 1) {
-        printf("Erro ao converter IP da cauda\n");
-        return NULL;
-    }
+//     if(inet_pton(AF_INET, hostname, &tail->socket.sin_addr) < 1) {
+//         printf("Erro ao converter IP da cauda\n");
+//         return NULL;
+//     }
 
-    if(network_connect(tail) == -1){
-        free(tail);
-        return NULL;
-    }
-    return tail;
-}
+//     if(network_connect(tail) == -1){
+//         free(tail);
+//         return NULL;
+//     }
+//     return tail;
+// }

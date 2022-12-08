@@ -17,6 +17,7 @@
 #include <arpa/inet.h>
 
 struct tree_t *global_tree;
+struct tree_t *backup_tree;
 struct op_proc_t *op_proc;
 struct request_t *queue_head;
 int last_assigned;
@@ -37,6 +38,8 @@ char next_server_id[120];
 char* server_address_port;
 char server_id[120];
 
+int first_write = 1;
+
 
 /* Inicia o skeleton da árvore.
 * O main() do servidor deve chamar esta função antes de poder usar a
@@ -49,6 +52,12 @@ int tree_skel_init(int N, char* address_port){
     global_tree = tree_create();
 
     if(global_tree == NULL){
+        return -1;
+    }
+
+    backup_tree = tree_create();
+
+    if(backup_tree == NULL){
         return -1;
     }
 
@@ -70,9 +79,9 @@ int tree_skel_init(int N, char* address_port){
         }
     }
 
+    server_address_port = malloc(strlen(address_port) +1);
     server_address_port = address_port;
     children_list =	(zoo_string *) malloc(sizeof(zoo_string));
-    // zh = malloc(sizeof(struct _zhandle));
 
     return 0;
 }
@@ -80,7 +89,7 @@ int tree_skel_init(int N, char* address_port){
 /* Liberta toda a memória e recursos alocados pela função tree_skel_init.
  */
 void tree_skel_destroy(){
-    tree_destroy(global_tree);
+    tree_destroy(backup_tree);
     for(int i = 0; i < n_threads; i++){
         //pthread_exit(&thread_ids[i]);
         pthread_detach(thread_ids[i]);
@@ -89,7 +98,9 @@ void tree_skel_destroy(){
     free(op_proc->in_progress);
     free(op_proc);
     free(queue_head);
-
+    
+    free(children_list);
+    free(server_address_port);
     zookeeper_close(zh);
 }
 
@@ -98,7 +109,7 @@ void tree_skel_destroy(){
  * Retorna 0 (OK) ou -1 (erro, por exemplo, árvore nao incializada)
 */
 int invoke(struct message_t *msg){
-    if(global_tree == NULL){
+    if(backup_tree == NULL){
         return -1;
     }
 
@@ -109,20 +120,20 @@ int invoke(struct message_t *msg){
         case MESSAGE_T__OPCODE__OP_SIZE:
             msg->content.opcode = MESSAGE_T__OPCODE__OP_SIZE + 1;
             msg->content.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
-            msg->content.result = tree_size(global_tree);
+            msg->content.result = tree_size(backup_tree);
             return 0;
         break;
 
         case MESSAGE_T__OPCODE__OP_HEIGHT:
             msg->content.opcode = MESSAGE_T__OPCODE__OP_HEIGHT + 1;
             msg->content.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
-            msg->content.result = tree_height(global_tree);
+            msg->content.result = tree_height(backup_tree);
             return 0;
         break;
 
         case MESSAGE_T__OPCODE__OP_DEL:
             printf("Operacao de escrita mais recente, com numero de ordem %d\n", last_assigned);
-            last_assigned++;
+            // last_assigned++;
 
             request = malloc(sizeof(struct request_t));
             request->op = 0;
@@ -134,6 +145,8 @@ int invoke(struct message_t *msg){
             msg->content.opcode = MESSAGE_T__OPCODE__OP_DEL + 1;
             msg->content.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
             msg->content.op_n = last_assigned;
+
+            last_assigned++;
 
             lock_queue();
 
@@ -151,7 +164,7 @@ int invoke(struct message_t *msg){
         break;
 
         case MESSAGE_T__OPCODE__OP_GET:
-            data = tree_get(global_tree, msg->content.key);
+            data = tree_get(backup_tree, msg->content.key);
             if(data == NULL){
                 printf("A entrada %s nao existe!\n", msg->content.key);
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_GET + 1;
@@ -171,7 +184,7 @@ int invoke(struct message_t *msg){
 
         case MESSAGE_T__OPCODE__OP_PUT:
             printf("Operacao de escrita mais recente, com numero de ordem %d\n", last_assigned);
-            last_assigned++;
+            //last_assigned++;
 
             request = malloc(sizeof(struct request_t));
             data = data_create2(msg->content.data.len, msg->content.data.data);
@@ -184,6 +197,8 @@ int invoke(struct message_t *msg){
             msg->content.opcode = MESSAGE_T__OPCODE__OP_PUT + 1;
             msg->content.c_type = MESSAGE_T__C_TYPE__CT_RESULT;
             msg->content.op_n = last_assigned;
+
+            last_assigned++;
 
             lock_queue();
 
@@ -201,9 +216,8 @@ int invoke(struct message_t *msg){
         break;
 
         case MESSAGE_T__OPCODE__OP_GETKEYS: ;
-            char **keys = tree_get_keys(global_tree);
+            char **keys = tree_get_keys(backup_tree);
 
-            //int i = 0;
             if(keys == NULL){
                 printf("A arvore esta vazia!\n");
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_ERROR;
@@ -211,7 +225,7 @@ int invoke(struct message_t *msg){
                 return 0;
             }
             else{
-                msg->content.n_keys = tree_size(global_tree);
+                msg->content.n_keys = tree_size(backup_tree);
                 msg->content.keys = keys;
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_GETKEYS + 1;
                 msg->content.c_type = MESSAGE_T__C_TYPE__CT_KEYS;
@@ -220,7 +234,7 @@ int invoke(struct message_t *msg){
         break;
 
         case MESSAGE_T__OPCODE__OP_GETVALUES: ;
-            char **values = (char **)tree_get_values(global_tree);
+            char **values = (char **)tree_get_values(backup_tree);
             if(values == NULL){
                 printf("A arvore esta vazia!\n");
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_ERROR;
@@ -228,7 +242,7 @@ int invoke(struct message_t *msg){
                 return 0;
             }
             else{
-                msg->content.n_values = tree_size(global_tree);
+                msg->content.n_values = tree_size(backup_tree);
                 msg->content.values = values; 
                 msg->content.opcode = MESSAGE_T__OPCODE__OP_GETVALUES + 1;
                 msg->content.c_type = MESSAGE_T__C_TYPE__CT_VALUES;
@@ -360,12 +374,7 @@ void unlock_op_proc(){
 
 int tree_skel_put(struct request_t* request){
     lock_tree();
-    printf("TREE IS NULL %d\n", global_tree == NULL);
-    printf("TREE->ENTRY IS NULL %d\n", global_tree->entry == NULL);
-    //tree_get_values(global_tree);
-    printf("CHEGUEI AQUI1\n");
-    int result = tree_put(global_tree, request->key, request->data);
-    printf("CHEGUEI AQUI2\n");
+    int result = tree_put(backup_tree, request->key, request->data);
     
     if(result == -1){
         printf("Ocorreu um erro a colocar a entrada %s!\n", request->key);
@@ -378,12 +387,13 @@ int tree_skel_put(struct request_t* request){
         }
     }
     unlock_tree();
+    first_write = 0;
     return result;
 }
 
 int tree_skel_del(struct request_t* request){
     lock_tree();
-    int result = tree_del(global_tree, request->key);
+    int result = tree_del(backup_tree, request->key);
 
     if(result == -1){
         printf("Nao foi encontrada a entrada %s!\n", request->key);
@@ -484,6 +494,10 @@ int tree_skel_zookeeper_init(char* address_port){
                         return -1;
                     }
                     next_server = rtree_connect(buffer);
+                    if(next_server != NULL){
+                        printf("Ocorreu um erro a conectar ao proximo servidor!\n");
+                        return -1;
+                    }
                     strcpy(next_server_id, next_id);
 
                     free(buffer);
@@ -538,11 +552,17 @@ void tree_skel_child_watcher(zhandle_t *wzh, int type, int state, const char *zp
                             rtree_disconnect(next_server);
                             next_server = rtree_connect(buffer);
                             strcpy(next_server_id, buffer);
+                            printf("NEXT SERVER IS %s\n", next_server_id);
                         } 
                     }
                     else{
                         next_server = rtree_connect(buffer);
+                        if(next_server != NULL){
+                            printf("Ocorreu um erro a conectar ao proximo servidor!\n");
+                            return;
+                        }
                         strcpy(next_server_id, buffer);
+
                     }
                     free(buffer);
                 }

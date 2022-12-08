@@ -12,9 +12,20 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <unistd.h>
+
+struct rtree_t *head;
+struct rtree_t *tail;
+
+typedef struct String_vector zoo_string; 
+zoo_string* children_list;
+static zhandle_t *zh;
+static int is_connected;
+static char *watcher_ctx = "ZooKeeper Data Watcher";
 
 
 int main(int argc, char *argv[]){
+    int value = -1;
     if(argc != 2){
         printf("Incluir o IP ou nome do servidor e o numero do porto TCP do servidor!\nExemplo de utilizacao: ./bin/tree-client<server>:<port>\n");
         return -1;
@@ -26,8 +37,8 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-    struct rtree_t *head = rtree_connect_head();
-    struct rtree_t *tail = rtree_connect_tail();
+    // struct rtree_t *head = rtree_connect_head();
+    // struct rtree_t *tail = rtree_connect_tail();
     //tree = rtree_connect(argv[1]);
     if(head == NULL){
         printf("Ocorreu um erro a associar o cliente ao servidor da cabeca!\n");
@@ -69,7 +80,20 @@ int main(int argc, char *argv[]){
             struct data_t *data = data_create2(size, input_data);
             struct entry_t *entry = entry_create(key, data);
 
-            rtree_put(head, entry);
+            value = rtree_put(head, entry);
+            if(value > 0){
+                //printf("Pedido de operacao colocado na fila com o numero de ordem %d\n", value);
+                sleep(1);
+                if(!rtree_verify(tail, value)){
+                    rtree_put(head, entry);
+                }
+                else{
+                    printf("Pedido de operacao colocado na fila com o numero de ordem %d\n", value);
+                }
+            }
+            else{
+                printf("Entrada nao inserida.");
+            }
             printf("-----------------------\n");
         }
 
@@ -83,7 +107,11 @@ int main(int argc, char *argv[]){
 
             struct data_t *data = rtree_get(tail, key);
             if(data != NULL){
-                printf("Chave %s tem valor %s\n", key, (char*) data->data);
+                char data_val[data->datasize + 1];
+                memcpy(data_val, (char*) data->data, data->datasize);
+                data_val[data->datasize] = '\0';
+                printf("Chave %s tem valor %s\n", key, data_val);
+                printf("DATASIZE %d\n", data->datasize);
             }
             data_destroy(data);
             printf("-----------------------\n");
@@ -97,7 +125,20 @@ int main(int argc, char *argv[]){
                 continue;
             }
 
-            rtree_del(head, key);
+            value = rtree_del(head, key);
+            if(value > 0){
+                //printf("Pedido de operacao colocado na fila com o numero de ordem %d\n", value);
+                sleep(1);
+                if(!rtree_verify(tail, value)){
+                    rtree_del(head, key);
+                }
+                else{
+                    printf("Pedido de operacao colocado na fila com o numero de ordem %d\n", value);
+                }
+            }
+            else{
+                printf("Entrada nao inserida.");
+            }
             printf("-----------------------\n");
         }
 
@@ -114,7 +155,12 @@ int main(int argc, char *argv[]){
         else if(strcmp(token, "getkeys") == 0){
             char **keys = rtree_get_keys(tail);
             if(keys == NULL){
-                printf("Ocorreu um erro a obter as chaves!\n");
+                if(rtree_size(tail) == 0){
+                    printf("A arvore esta vazia\n");
+                }
+                else{
+                    printf("Ocorreu um erro a obter as chaves!\n");
+                }
                 continue;
             }
             else{
@@ -138,7 +184,12 @@ int main(int argc, char *argv[]){
         else if(strcmp(token, "getvalues") == 0){
             char **values = (char **) rtree_get_values(tail);
             if(values == NULL){
-                printf("Ocorreu um erro a obter os valores!\n");
+                if(rtree_size(tail) == 0){
+                    printf("A arvore esta vazia\n");
+                }
+                else{
+                    printf("Ocorreu um erro a obter as chaves!\n");
+                }
                 continue;
             }
             else{
@@ -197,4 +248,158 @@ int main(int argc, char *argv[]){
         }      
     }  
     return 0;  
+}
+
+
+int client_stub_zookeeper_init(char* address_port){
+    children_list =	(zoo_string *) malloc(sizeof(zoo_string));
+    //aqui é para fazer malloc?
+
+    zh = zookeeper_init(address_port, client_stub_my_watcher_func, 2000, 0,0,0);
+    if(zh == NULL){
+		printf("Ocorreu um erro a conectar ao servidor Zookeeper!\n");
+	    return -1;
+	}
+    else{
+        is_connected = 1;
+    }
+
+    if(is_connected){
+        if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
+            printf("Ocorreu um erro a definir uma vigia em /chain\n");
+            return -1;
+        }
+
+
+        head = rtree_connect_head();
+        tail = rtree_connect_tail();
+    }
+    return 0;
+}
+
+void client_stub_my_watcher_func(zhandle_t *zzh, int type, int state, const char *path, void *watcherCtx){
+	if (type == ZOO_SESSION_EVENT){
+		if (state == ZOO_CONNECTED_STATE){
+			is_connected = 1; 
+		}
+        else{
+			is_connected = 0; 
+		}
+	}
+}
+
+void client_stub_child_watcher(zhandle_t *wzh, int type, int state, const char *zpath, void *watcher_ctx){
+    if(state == ZOO_CONNECTED_STATE){
+		if(type == ZOO_CHILD_EVENT){
+            if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
+                printf("Ocorreu um erro a definir uma vigia em /chain\n");
+                return;
+            }
+
+            head = rtree_connect_head();
+            tail = rtree_connect_tail();
+
+            if(zoo_wget_children(zh, "/chain", client_stub_child_watcher, watcher_ctx, children_list) != ZOK){
+                printf("Ocorreu um erro a definir uma vigia em /chain\n");
+                return;
+            }
+        }
+    }
+}
+
+struct rtree_t *rtree_connect_head(){
+    char min[120] = "node9999999999";
+    char child[120] = "";
+
+    int buf_size = 1024;
+    char* buffer = malloc(buf_size);
+
+    for(int i = 0; i < children_list->count; i++){
+        strcpy(child, children_list->data[i]);
+        if(strcmp(child, min) < 0){
+            strcpy(min, child);
+        } 
+    }
+
+    char head_path[120] = "/chain/";
+    strcat(head_path, min);
+
+    printf("HEAD PATH %s\n", head_path);
+
+    if(zoo_get(zh, head_path, 0, buffer, &buf_size, 0) != ZOK){
+        printf("Ocorreu um erro a obter o servidor da cabeca!\n");
+        return NULL;
+    }
+
+    head = rtree_connect(buffer);
+    // head = malloc(sizeof(struct rtree_t));
+    // if(head == NULL){
+    //     return NULL;
+    // }
+
+    // char *hostname = strtok((char*) buffer, ":");
+    // int port = atoi(strtok(NULL, ":"));
+
+    // head->socket.sin_port = htons(port);
+    // head->socket.sin_family = AF_INET;
+
+    // if(inet_pton(AF_INET, hostname, &head->socket.sin_addr) < 1) {
+    //     printf("Erro ao converter IP da cabeca\n");
+    //     return NULL;
+    // }
+
+    // if(network_connect(head) == -1){
+    //     free(head);
+    //     return NULL;
+    // }
+    return head;
+}
+
+struct rtree_t *rtree_connect_tail(){
+    char max[120] = "node0000000000";
+    char child[120] = "";
+
+    int buf_size = 1024;
+    char* buffer = malloc(buf_size);
+
+    for(int i = 0; i < children_list->count; i++){
+        strcpy(child, children_list->data[i]);
+        if(strcmp(child, max) > 0){
+            strcpy(max, child);
+        } 
+    }
+
+    char tail_path[120] = "/chain/";
+    strcat(tail_path, max);
+
+    printf("TAIL PATH %s\n", tail_path);
+
+    if(zoo_get(zh, tail_path, 0, buffer, &buf_size, 0) != ZOK){
+        printf("Ocorreu um erro a obter o servidor da cauda!\n");
+        return NULL;
+    }
+
+    tail = rtree_connect(buffer);
+
+    // tail = malloc(sizeof(struct rtree_t));
+    // if(tail == NULL){
+    //     return NULL;
+    // }
+
+    // char *hostname = strtok((char*) buffer, ":");
+    // int port = atoi(strtok(NULL, ":"));
+
+    // tail->socket.sin_port = htons(port);
+    // tail->socket.sin_family = AF_INET;
+
+    // if(inet_pton(AF_INET, hostname, &tail->socket.sin_addr) < 1) {
+    //     printf("Erro ao converter IP da cauda\n");
+    //     return NULL;
+    // }
+
+    // if(network_connect(tail) == -1){
+    //     free(tail);
+    //     return NULL;
+    // }
+    return tail;
 }

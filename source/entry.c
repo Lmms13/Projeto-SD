@@ -44,7 +44,7 @@ void entry_destroy(struct entry_t *entry){
  * nova estrutura.
  */
 struct entry_t *entry_dup(struct entry_t *entry){
-    if(entry == NULL){
+    if(entry == NULL || entry->key == NULL){
         return NULL;
     }
     char* newkey = strdup(entry->key);

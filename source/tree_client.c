@@ -111,7 +111,6 @@ int main(int argc, char *argv[]){
                 memcpy(data_val, (char*) data->data, data->datasize);
                 data_val[data->datasize] = '\0';
                 printf("Chave %s tem valor %s\n", key, data_val);
-                printf("DATASIZE %d\n", data->datasize);
             }
             data_destroy(data);
             printf("-----------------------\n");

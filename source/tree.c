@@ -61,10 +61,7 @@ int tree_put(struct tree_t *tree, char *key, struct data_t *value){
     strcpy(dup_key, key);
     struct entry_t *new_entry = entry_create(dup_key, data_dup(value));
 
-    // printf("TREE SIZE %d\n", tree_size(tree));
-
     if(tree->entry == NULL){
-        printf("aqui\n");
         tree->entry = new_entry;
         return 0;
     }
@@ -138,7 +135,7 @@ int tree_del(struct tree_t *tree, char *key){
         tree_del_from_prev(tree, replacement_tree->entry->key); 
         entry_destroy(tree->entry);
         tree->entry = entry_dup(replacement_tree->entry);
-        printf("destroying %s\n", replacement_tree->entry->key);
+        //printf("destroying %s\n", replacement_tree->entry->key);
         tree_destroy(replacement_tree);
         return 0;
     }
@@ -147,7 +144,7 @@ int tree_del(struct tree_t *tree, char *key){
         if(tree->left != NULL){
             if(strcmp(key, tree->left->entry->key) == 0){
                 if(tree->left->right == NULL && tree->left->left == NULL){
-                    printf("destroying %s\n", tree->left->entry->key);
+                    //printf("destroying %s\n", tree->left->entry->key);
                     tree_destroy(tree->left);
                     tree->left = NULL;
                 }
@@ -156,7 +153,7 @@ int tree_del(struct tree_t *tree, char *key){
                     tree_del_from_prev(tree->left, replacement_tree->entry->key); 
                     entry_destroy(tree->left->entry);
                     tree->left->entry = entry_dup(replacement_tree->entry);
-                    printf("destroying %s\n", replacement_tree->entry->key);
+                    //printf("destroying %s\n", replacement_tree->entry->key);
                     tree_destroy(replacement_tree);
                 }
                 return 0;
@@ -173,7 +170,7 @@ int tree_del(struct tree_t *tree, char *key){
         if(tree->right != NULL){
             if(strcmp(key, tree->right->entry->key) == 0){
                 if(tree->right->right == NULL && tree->right->left == NULL){
-                    printf("destroying %s\n", tree->right->entry->key);
+                    //printf("destroying %s\n", tree->right->entry->key);
                     tree_destroy(tree->right);
                     tree->right = NULL;
                 }
@@ -182,7 +179,7 @@ int tree_del(struct tree_t *tree, char *key){
                     tree_del_from_prev(tree->right, replacement_tree->entry->key); 
                     entry_destroy(tree->right->entry);
                     tree->right->entry = entry_dup(replacement_tree->entry);
-                    printf("destroying %s\n", replacement_tree->entry->key);
+                    //printf("destroying %s\n", replacement_tree->entry->key);
                     tree_destroy(replacement_tree);
                 }
                 return 0;

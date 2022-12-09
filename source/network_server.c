@@ -107,7 +107,7 @@ int network_main_loop(int listening_socket){
 
         for(int i = 1; i < desc_num; i++){
             if(desc_set[i].revents & POLLIN){
-            printf("%d tem dados para ler\n", i);
+            // printf("%d tem dados para ler\n", i);
                 struct message_t *msg = network_receive(desc_set[i].fd);
 
                 if(msg == NULL){

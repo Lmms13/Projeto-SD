@@ -72,6 +72,7 @@ int main(int argc, char *argv[]){
             if(key == NULL || input_data == NULL){
                 printf("O comando put tem de incluir uma chave e dados!\n");
                 printf("Exemplo: put <key> <data>\n");
+                printf("-----------------------\n");
                 continue;
             }
 
@@ -102,6 +103,7 @@ int main(int argc, char *argv[]){
             if(key == NULL){
                 printf("O comando get tem de incluir uma chave!\n");
                 printf("Exemplo: get <key>\n");
+                printf("-----------------------\n");
                 continue;
             }
 
@@ -121,6 +123,7 @@ int main(int argc, char *argv[]){
             if(key == NULL){
                 printf("O comando del tem de incluir uma chave!\n");
                 printf("Exemplo: del <key>\n");
+                printf("-----------------------\n");
                 continue;
             }
 
@@ -160,6 +163,7 @@ int main(int argc, char *argv[]){
                 else{
                     printf("Ocorreu um erro a obter as chaves!\n");
                 }
+                printf("-----------------------\n");
                 continue;
             }
             else{
@@ -189,6 +193,7 @@ int main(int argc, char *argv[]){
                 else{
                     printf("Ocorreu um erro a obter as chaves!\n");
                 }
+                printf("-----------------------\n");
                 continue;
             }
             else{
@@ -214,6 +219,7 @@ int main(int argc, char *argv[]){
             if(input == NULL){
                 printf("O comando verify tem de incluir um numero!\n");
                 printf("Exemplo: get <op_n>\n");
+                printf("-----------------------\n");
                 continue;
             }
             int op_n = atoi(input);
@@ -252,7 +258,6 @@ int main(int argc, char *argv[]){
 
 int client_stub_zookeeper_init(char* address_port){
     children_list =	(zoo_string *) malloc(sizeof(zoo_string));
-    //aqui é para fazer malloc?
 
     zh = zookeeper_init(address_port, client_stub_my_watcher_func, 2000, 0,0,0);
     if(zh == NULL){

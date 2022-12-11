@@ -38,9 +38,6 @@ char next_server_id[120];
 char* server_address_port;
 char server_id[120];
 
-int first_write = 1;
-
-
 /* Inicia o skeleton da árvore.
 * O main() do servidor deve chamar esta função antes de poder usar a
 * função invoke().
@@ -65,7 +62,7 @@ int tree_skel_init(int N, char* address_port){
     n_threads = N;
     op_proc = malloc(sizeof(struct op_proc_t));
     op_proc->max_proc = 0;
-    op_proc->in_progress = calloc(50, sizeof(int)); //valor arbitrário, verificar se funciona
+    op_proc->in_progress = calloc(50, sizeof(int)); //valor arbitrário
     
     queue_head = malloc(sizeof(struct request_t));
     queue_head = NULL;
@@ -91,7 +88,6 @@ int tree_skel_init(int N, char* address_port){
 void tree_skel_destroy(){
     tree_destroy(backup_tree);
     for(int i = 0; i < n_threads; i++){
-        //pthread_exit(&thread_ids[i]);
         pthread_detach(thread_ids[i]);
     }
     free(thread_ids);
@@ -133,7 +129,6 @@ int invoke(struct message_t *msg){
 
         case MESSAGE_T__OPCODE__OP_DEL:
             printf("Operacao de escrita mais recente, com numero de ordem %d\n", last_assigned);
-            // last_assigned++;
 
             request = malloc(sizeof(struct request_t));
             request->op = 0;
@@ -184,7 +179,6 @@ int invoke(struct message_t *msg){
 
         case MESSAGE_T__OPCODE__OP_PUT:
             printf("Operacao de escrita mais recente, com numero de ordem %d\n", last_assigned);
-            //last_assigned++;
 
             request = malloc(sizeof(struct request_t));
             data = data_create2(msg->content.data.len, msg->content.data.data);
@@ -387,7 +381,6 @@ int tree_skel_put(struct request_t* request){
         }
     }
     unlock_tree();
-    first_write = 0;
     return result;
 }
 
@@ -423,7 +416,6 @@ int place_in_queue(struct request_t *queue, struct request_t *request){
 }
 
 int tree_skel_zookeeper_init(char* address_port){
-        //zoo_string* children_list =	(zoo_string *) malloc(sizeof(zoo_string));
     zh = zookeeper_init(address_port, tree_skel_my_watcher_func, 2000, 0, 0, 0);
     if(zh == NULL){
 		printf("Ocorreu um erro a conectar ao servidor Zookeeper!\n");
@@ -433,7 +425,6 @@ int tree_skel_zookeeper_init(char* address_port){
         is_connected = 1;
     }
 
-    //sleep(3);
     if(is_connected){
         if(ZNONODE == zoo_exists(zh, "/chain", 0, NULL)){
             printf("O node /chain ainda nao existe\n");
@@ -552,7 +543,7 @@ void tree_skel_child_watcher(zhandle_t *wzh, int type, int state, const char *zp
                             rtree_disconnect(next_server);
                             next_server = rtree_connect(buffer);
                             strcpy(next_server_id, buffer);
-                            printf("NEXT SERVER IS %s\n", next_server_id);
+                            printf("PROXIMO SERVIDOR: %s\n", next_server_id);
                         } 
                     }
                     else{

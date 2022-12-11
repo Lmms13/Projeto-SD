@@ -3,9 +3,19 @@
 -Afonso Aleluia 56363
 -Daniel Marques 56379
 
-Na linha 107 do network_server.c, "if(desc_set[i].revents & POLLIN)",
-a condição nunca é cumprida, nunca entrando no if, e o grupo não 
-conseguiu perceber porquê, visto que o código aparenta estar correto. 
-Como esta instrução está perto do ponto de partida da interação entre 
-o servidor e o(s) cliente(s), tornou-se impossível testar a interação 
-completa, especialmente a parte do tree_skel.c.
+Possíveis erros no delete, particularmente numa estrutura do tipo:
+a
+ \
+  b
+   \
+    c
+i.e. sempre para a direita, em que, ao apagar 'a', 'b' passa a ser
+a root mas 'c' desaparece.
+
+Em algumas circunstâncias, os valores das estruturas 'data' ficavam
+"corrompidos", provavelmente por má gestão de memória. Em que,
+se o valor fosse 'abc' e o datasize fosse, consequentemente, 3,
+o valor apresentado no cliente mostraria 'abc' com símbolos 
+aleatórios à frente, por exemplo 'abc&% ,$)'. Assim, apenas são 
+mostrados ao cliente os primeiros 'datasize' caracteres, neste 
+caso 3, logo, 'abc'.

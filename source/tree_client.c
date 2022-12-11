@@ -31,15 +31,11 @@ int main(int argc, char *argv[]){
         return -1;
     }
 
-    //struct rtree_t *tree;
     if(client_stub_zookeeper_init(argv[1]) == -1){
         printf("Ocorreu um erro a iniciar o Zookeeper!\n");
         return -1;
     }
 
-    // struct rtree_t *head = rtree_connect_head();
-    // struct rtree_t *tail = rtree_connect_tail();
-    //tree = rtree_connect(argv[1]);
     if(head == NULL){
         printf("Ocorreu um erro a associar o cliente ao servidor da cabeca!\n");
         return -1;
@@ -83,7 +79,6 @@ int main(int argc, char *argv[]){
 
             value = rtree_put(head, entry);
             if(value > 0){
-                //printf("Pedido de operacao colocado na fila com o numero de ordem %d\n", value);
                 sleep(1);
                 if(!rtree_verify(tail, value)){
                     rtree_put(head, entry);
@@ -129,7 +124,6 @@ int main(int argc, char *argv[]){
 
             value = rtree_del(head, key);
             if(value > 0){
-                //printf("Pedido de operacao colocado na fila com o numero de ordem %d\n", value);
                 sleep(1);
                 if(!rtree_verify(tail, value)){
                     rtree_del(head, key);
@@ -328,7 +322,7 @@ struct rtree_t *rtree_connect_head(){
     char head_path[120] = "/chain/";
     strcat(head_path, min);
 
-    printf("HEAD PATH %s\n", head_path);
+    printf("CABECA: %s\n", head_path);
 
     if(zoo_get(zh, head_path, 0, buffer, &buf_size, 0) != ZOK){
         printf("Ocorreu um erro a obter o servidor da cabeca!\n");
@@ -336,26 +330,6 @@ struct rtree_t *rtree_connect_head(){
     }
 
     head = rtree_connect(buffer);
-    // head = malloc(sizeof(struct rtree_t));
-    // if(head == NULL){
-    //     return NULL;
-    // }
-
-    // char *hostname = strtok((char*) buffer, ":");
-    // int port = atoi(strtok(NULL, ":"));
-
-    // head->socket.sin_port = htons(port);
-    // head->socket.sin_family = AF_INET;
-
-    // if(inet_pton(AF_INET, hostname, &head->socket.sin_addr) < 1) {
-    //     printf("Erro ao converter IP da cabeca\n");
-    //     return NULL;
-    // }
-
-    // if(network_connect(head) == -1){
-    //     free(head);
-    //     return NULL;
-    // }
     return head;
 }
 
@@ -376,7 +350,7 @@ struct rtree_t *rtree_connect_tail(){
     char tail_path[120] = "/chain/";
     strcat(tail_path, max);
 
-    printf("TAIL PATH %s\n", tail_path);
+    printf("CAUDA: %s\n", tail_path);
 
     if(zoo_get(zh, tail_path, 0, buffer, &buf_size, 0) != ZOK){
         printf("Ocorreu um erro a obter o servidor da cauda!\n");
@@ -384,26 +358,5 @@ struct rtree_t *rtree_connect_tail(){
     }
 
     tail = rtree_connect(buffer);
-
-    // tail = malloc(sizeof(struct rtree_t));
-    // if(tail == NULL){
-    //     return NULL;
-    // }
-
-    // char *hostname = strtok((char*) buffer, ":");
-    // int port = atoi(strtok(NULL, ":"));
-
-    // tail->socket.sin_port = htons(port);
-    // tail->socket.sin_family = AF_INET;
-
-    // if(inet_pton(AF_INET, hostname, &tail->socket.sin_addr) < 1) {
-    //     printf("Erro ao converter IP da cauda\n");
-    //     return NULL;
-    // }
-
-    // if(network_connect(tail) == -1){
-    //     free(tail);
-    //     return NULL;
-    // }
     return tail;
 }

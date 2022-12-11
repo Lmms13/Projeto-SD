@@ -107,7 +107,6 @@ int network_main_loop(int listening_socket){
 
         for(int i = 1; i < desc_num; i++){
             if(desc_set[i].revents & POLLIN){
-            // printf("%d tem dados para ler\n", i);
                 struct message_t *msg = network_receive(desc_set[i].fd);
 
                 if(msg == NULL){
@@ -166,7 +165,7 @@ struct message_t *network_receive(int client_socket){
     size_net_ord = 0;
     nbytes = message_read_all(client_socket, &size_net_ord, sizeof(int));
     if(nbytes == -1){
-        perror("Cliente fechou o socket!");
+        //perror("Cliente fechou o socket!");
         close(client_socket);
         return NULL;
     };
@@ -175,7 +174,7 @@ struct message_t *network_receive(int client_socket){
     uint8_t *buffer = malloc(size);
     nbytes = message_read_all(client_socket, buffer, size);
     if(nbytes == -1){
-        perror("O cliente fechou o socket");
+        //perror("O cliente fechou o socket");
         close(client_socket);
         return NULL;
     }

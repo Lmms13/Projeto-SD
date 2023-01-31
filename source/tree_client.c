@@ -322,7 +322,6 @@ struct rtree_t *rtree_connect_head(){
     char head_path[120] = "/chain/";
     strcat(head_path, min);
 
-    printf("-----------------------\n");
     printf("CABECA: %s\n", head_path);
 
     if(zoo_get(zh, head_path, 0, buffer, &buf_size, 0) != ZOK){
@@ -352,7 +351,6 @@ struct rtree_t *rtree_connect_tail(){
     strcat(tail_path, max);
 
     printf("CAUDA: %s\n", tail_path);
-    printf("-----------------------\n");
 
     if(zoo_get(zh, tail_path, 0, buffer, &buf_size, 0) != ZOK){
         printf("Ocorreu um erro a obter o servidor da cauda!\n");
